@@ -1,0 +1,199 @@
+@import "elements";
+@import "fonts";
+
+$app-width: 1366px;
+$app-background-color: #042740;
+$line-color: #10548a;
+$content-background-color: #0d304b;
+$form-background-color: #0f426b;
+$action-color: #2296f3;
+$input-background-color: #16334c;
+
+$menu-color: #1f8ae0;
+$text-color-01: #ffffff;
+$text-color-02: #a8aeb4;
+$text-color-03: #2296f3;
+$text-color-04: #8db84d;
+
+$default-margin: 20px;
+
+%center-block-absolute
+{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+$transition-property: all;
+$transition-duration: 0.15s;
+$transition-function: linear;
+
+@mixin transition-options-mixin($property, $duration, $function) {
+	-webkit-transition: $property $duration $function;
+	-moz-transition: $property $duration $function;
+	-ms-transition: $property $duration $function;
+	-o-transition: $property $duration $function;
+	transition: $property $duration $function;
+}
+
+%transition-options-extend {
+	@include transition-options-mixin($transition-property, $transition-duration, $transition-function);
+}
+*{
+	user-select: none;
+}
+.line
+{
+	width: 100%;
+	height: 1px;
+	background-color: $line-color;
+	margin: $default-margin 0;
+}
+
+%button
+{
+	background-color: $action-color;
+	border-radius: 2px;
+	height: 30px;
+	padding: 0 10px 0 10px;
+	overflow: hidden;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	color: $text-color-01;
+	line-height: 28px;
+}
+
+.button
+{
+	@extend %button;
+	display: inline-block;
+}
+
+
+%button-add-icon
+{
+	display: inline-block;
+	width: 15px;
+	height: 15px;
+	/*border-radius: 50%;*/
+	/*border: solid 2px $text-color-01;*/
+	line-height: 15px;
+	font-weight: bold;
+	margin-right: 10px;
+}
+
+%button-add
+{
+   @extend %button;
+	line-height: 28px;
+
+	div:first-child
+	{
+		@extend %button-add-icon;
+	}
+}
+
+input
+{
+	background-color: $input-background-color;
+	border: 1px solid $line-color;
+	border-radius: 2px;
+	color: $text-color-01;
+	padding: 5px;
+	height: 30px;
+	cursor: pointer;
+	font-size: 12px;
+	&.dateField{
+		padding: 0 0 0 5px;
+		&::-webkit-datetime-edit-text {
+			color: #ffffff;
+			padding: 0 0;
+			font-size: 12px;
+		}
+		&::-webkit-inner-spin-button {
+			display: none;
+			-webkit-appearance: none;
+		}
+		&::-webkit-calendar-picker-indicator {
+			color: rgba(0, 0, 0, 0);
+			opacity: 1;
+			display: block;
+			background-color: transparent;
+			//background-image: url("../images/cal.svg");
+			background-repeat: no-repeat;
+			cursor: pointer;
+			&:hover{
+				background-color: rgba(0, 0, 0, 0);
+			}
+		}
+		&::-webkit-clear-button {
+			display: none;
+			-webkit-appearance: none;
+		}
+	}
+}
+select
+{
+	background-color: $input-background-color;
+	border: 1px solid $line-color;
+	border-radius: 2px;
+	color: $text-color-01;
+	font-size: 12px;
+	padding: 5px;
+	-webkit-appearance: menulist;
+	height: 30px;
+}
+
+textarea
+{
+	background-color: $input-background-color;
+	border: 1px solid $line-color;
+	border-radius: 2px;
+	color: $text-color-02;
+	padding: 5px;
+	//height: 20px;
+}
+
+
+.close {
+	//position: absolute;
+	//right: 32px;
+	//top: 32px;
+	width: 0;
+	height: 0;
+	//opacity: 0.3;
+}
+.close:hover {
+	opacity: 1;
+}
+.close:before, .close:after {
+	position: absolute;
+	left: 0;
+	content: ' ';
+	height: $default-margin;
+	width: 3px;
+	background-color: $text-color-01;
+}
+.close:before {
+	transform: rotate(45deg);
+}
+.close:after {
+	transform: rotate(-45deg);
+}
+
+.center-container {
+	width: 100%;
+	padding: 15px;
+	padding-top: 200px;
+	margin: 0 auto;
+}
+
+.text-center{
+	text-align:center!important
+}
+
+h4 {
+	font-size: 20px;
+}
