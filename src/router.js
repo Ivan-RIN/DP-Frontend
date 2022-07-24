@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Tasks from './views/tasks-view.vue';
+import VmTasks from './views/vm-tasks-view.vue';
 import History from './views/history-view.vue';
 import Report from './views/report-view.vue';
 import EventLog from './views/event-log-view.vue';
@@ -42,6 +43,11 @@ export default new Router({
 			path: '/event-log',
 			name: 'event-log',
 			component: EventLog,
+		},
+		{
+			path: '/vm',
+			name: 'vm-tasks',
+			component: VmTasks,
 		},
 	],
 });
