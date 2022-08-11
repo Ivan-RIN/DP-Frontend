@@ -19,6 +19,7 @@ export const addresses = {
     performanceCriterions: 'PerformanceCriterions',
     roles: 'Roles',
     userActions: 'History/ActionNames',
+    subdivisions: 'vmTasks/getSubdivisions'
 };
 
 export default {

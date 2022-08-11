@@ -10,8 +10,8 @@ Vue.use(Router);
 
 export default new Router({
 	mode: 'history',
-	//base: process.env.BASE_URL,
-	//base: 'http://localhost:5000/',
+	// base: process.env.BASE_URL,
+	// base: 'http://localhost:5000/',
 	routes: [
 		{
 			path: '/',
