@@ -8,6 +8,7 @@ import task from './modules/task-store';
 import login from './modules/login-store';
 import reports from './modules/reports/reports';
 import history from './modules/history-store';
+import vm from './modules/vm';
 
 Vue.use(Vuex);
 
@@ -19,6 +20,7 @@ export default new Vuex.Store({
 		login,
 		reports,
 		history,
+		vm
 	},
 	state: {
 		version: '0.3',

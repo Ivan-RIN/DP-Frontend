@@ -10,8 +10,8 @@ Vue.use(Router);
 
 export default new Router({
 	mode: 'history',
-	//base: process.env.BASE_URL,
-	//base: 'http://localhost:5000/',
+	// base: process.env.BASE_URL,
+	// base: 'http://localhost:5000/',
 	routes: [
 		{
 			path: '/',
@@ -45,9 +45,9 @@ export default new Router({
 			component: EventLog,
 		},
 		{
-			path: '/vm',
+			path: '/vm/:taskId',
 			name: 'vm-tasks',
-			component: VmTasks,
+			component: () => import('./views/vm-tasks-view.vue')
 		},
 	],
 });

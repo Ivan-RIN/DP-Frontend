@@ -6,9 +6,10 @@
 	        :multiple="multiple"
 	        :disabled="isDisabled">
 		<option class="grey-option" :value="undefined" disabled :selected="!value">{{placeholderProps}}</option>
+        <option v-if="isAll" :value="0">Все</option>
 		<option
 				v-for="(option, index) in this.options"
-				v-bind:key="index"
+				:key="index"
 				:value="option[valueField]"
 				:selected="selectedItem(option[valueField])">{{option[textField]}}</option>
 	</select>
@@ -27,6 +28,7 @@
 				value: undefined,
 				multiple: { type: Boolean, default: false },
 				isDisabled: { type: Boolean, default: false },
+                isAll: { type: Boolean, default: false }
 			},
 		data() {
 			return {

@@ -84,7 +84,7 @@
     import DatePickerComponent from '../common/date-picker-component.vue';
 
     export default {
-        name: 'task-filter-component',
+        name: 'vm-task-filter-component',
         components: {
             DpComboboxComponent,
             DatePickerComponent

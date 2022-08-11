@@ -83,7 +83,7 @@ import stub_img from '../assets/images/photo_stub.jpeg';
 export default {
   name: 'app-header',
   computed: {
-    foto() {
+      foto() {
       if (!this.fotoError) {
         return 'https://mail.gazprom-neft.local/ews/Exchange.asmx/s/GetUserPhoto?size=HR64x64&email='
             + this.loginUser.email;
