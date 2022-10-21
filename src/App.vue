@@ -7,7 +7,7 @@
 			</header>
 			<div class="header-stub"></div>
 			<main role="main" v-if="isPageReady">
-				<div id="main-content" v-if="isLogin">
+				<div id="main-content" v-if="isAlive">
 					<router-view/>
 				</div>
 				<div class="center-container container text-center" v-else>
@@ -51,7 +51,7 @@
 			// this.showModal && this.$bus.$off('openModal',this.showModal);
 		},
 		computed: {
-			...mapGetters(['isLogin', 'abilityRules']),
+			...mapGetters(['isLogin', 'isAlive', 'abilityRules']),
 		},
 		methods: {
 			...mapActions(['login']),

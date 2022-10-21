@@ -5,6 +5,7 @@ import Vuex from 'vuex';
 import dict from './modules/dictionary-store';
 import dataTypes from './modules/datatypes-store';
 import task from './modules/task-store';
+import storage from './modules/storage-store';
 import login from './modules/login-store';
 import reports from './modules/reports/reports';
 import history from './modules/history-store';
@@ -17,6 +18,7 @@ export default new Vuex.Store({
 		dict,
 		dataTypes,
 		task,
+		storage,
 		login,
 		reports,
 		history,

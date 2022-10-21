@@ -12,7 +12,7 @@ import modal from './components/dp-modal.vue';
 import vuetify from './plugins/vuetify';
 import errorModal from './components/modals/error-modal-component.vue';
 import globalMethods from './mixins/global-methods';
-
+import kiContext from '@kiyoaki_w/vue-context'
 
 Vue.use(AsyncComputed);
 Vue.use(abilitiesPlugin, ability.createAbility());

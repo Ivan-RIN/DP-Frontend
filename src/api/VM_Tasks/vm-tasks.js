@@ -49,20 +49,25 @@ export default {
 
     // ----------------------------------------------
 
-    async __getById(id) {
-        return api.get(`${PATH}/getTask/${id}`);
+    // FORM - POST //
+    async appendComment(data) {
+        const address = `${PATH}/appendComment/`;
+        return api.form(address, data);
     },
 
-    async getProgress(id) {
-        const address = `${PATH}/TaskProgress/${id}`;
-        return api.get(address);
+    async appendFiles(data) {
+        const address = `${PATH}/appendFiles/`;
+        return api.form(address, data);
     },
 
-    // POST //
-    async setProgress(data) {
-        const address = `${PATH}/TaskProgress`;
-        return api.post(address, data);
+    async downloadFile(fileId, data) {
+        const address = `${PATH}/downloadFile/${fileId}`;
+        return api.getFile(address, data)
     },
 
+    async deleteFile(fileId) {
+        const address = `${PATH}/deleteFile/${fileId}`;
+        return api.get(address)
+    }
 
 };

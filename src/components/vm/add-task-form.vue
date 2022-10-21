@@ -18,14 +18,10 @@
                     <div class="add-task-content-data-field" data-field>
                         <div data-name>Приоритет:<span class="requiredField">*</span></div>
                         <div class="add-task-content-data-field-priority">
-                            <input id="add-task-content-data-field-priority-critical" type="radio"
-                                   v-model="task.priority" :value="1">
-                            <label for="add-task-content-data-field-priority-critical">
-                                Критичные&nbsp;(первоочередные)</label>
-                            <input id="add-task-content-data-field-priority-typical" type="radio"
-                                   v-model="task.priority" :value="2">
-                            <label for="add-task-content-data-field-priority-typical">
-                                Некритичные</label>
+                            <input id="add-task-content-data-field-priority-typical" type="radio" v-model="task.priority" :value="2">
+                            <label for="add-task-content-data-field-priority-typical">Некритичные</label>
+							<input id="add-task-content-data-field-priority-critical" type="radio" v-model="task.priority" :value="1">
+							<label for="add-task-content-data-field-priority-critical">Критичные&nbsp;(первоочередные)</label>
                         </div>
                     </div>
                 </div>
@@ -34,17 +30,21 @@
                     <div class="add-task-content-data-field" data-field>
                         <div data-name>Структурное подразделение:<span class="requiredField">*</span></div>
                         <div data-value>
-                            <dp-combobox-component
+                            <dp-combobox
                                 :options="listDepartments"
+                                :textField="abbreviation"
                                 :isDisabled="!!editTask"
                                 text-field="fullName"
-                                v-model="task.departmentId"/>
+                                v-model="task.departmentId"
+                                :resetValue="resetUserName"
+                            />
                         </div>
                         <div data-name>Тип:<span class="requiredField">*</span></div>
                         <div data-value>
-                            <dp-combobox-component
+                            <dp-combobox
                                 :options="[]"
-                                :isDisabled="true"/>
+                                :isDisabled="true"
+                            />
                         </div>
                     </div>
                 </div>
@@ -57,15 +57,13 @@
                                    @input="inputValue($event.target.value)"
                                    @focus="visibleListExecutor=true"
                                    @click="visibleListExecutor=true"
-                                   @blur1="visibleListExecutor=false"
                             >
                             <div v-show="visibleListExecutor"
                                  @mouseleave="visibleListExecutor=false"
-                                 style="
-                                position: absolute; top: 34px; overflow: hidden;
+                                 style="position: absolute; top: 34px; overflow: hidden;
                                 background-color: rgba(0,0,0,0.9); border: 1px solid #010177"
                             >
-                                <div style="overflow-x: hidden; overflow-y: auto; width: 200px; max-height: 180px;">
+                                <div if v-if="filteredList.length > 0" style="overflow-x: hidden; overflow-y: auto; width: 200px; max-height: 180px;">
                                     <div
                                         class="add-task-content-data-list-users"
                                         style="padding: 4px; font-size: 12px; white-space: nowrap;"
@@ -73,7 +71,8 @@
                                         v-bind:key="index"
                                         @click="setExecutorId(user.id)"
                                         @mouseover=""
-                                    >{{ user.name }}
+                                    >
+                                        {{ user.name }}
                                     </div>
                                 </div>
                             </div>
@@ -107,7 +106,7 @@
 
 <script>
 import { mapActions, mapGetters, mapState } from 'vuex';
-import DpComboboxComponent from '../common/dp-combobox-component.vue';
+import DpCombobox from '@/components/vm/dp-combobox.vue';
 import globalMethods from '@/mixins/global-methods';
 import apiTasks from '@/api/VM_Tasks/vm-tasks';
 import DatePickerComponent from '../common/date-picker-component.vue';
@@ -119,7 +118,7 @@ export default {
     name: 'vm-add-task-form',
     components: {
         'dp-modal': DpModal,
-        DpComboboxComponent,
+        DpCombobox,
         DatePickerComponent,
         PerformanceCriterionsComponent,
         LoadingMaskComponent,
@@ -128,16 +127,16 @@ export default {
     props: ['editTask', 'buttonAction', 'tasks'],
     data() {
         return {
-            ...mapState('vm', ['userId']),
             task: {
                 initiatorId: 0,
                 name: '',
-                priority: 1,
+                priority: 2,
                 departmentId: 0,
                 executorId: 0,
                 executionDate: new Date().toISOString(),
                 description: ''
             },
+			abbreviation: 'abbreviation',
             visibleListExecutor: false,
             userName: '',
             dateTo: new Date().toISOString().substr(0, 10),
@@ -147,12 +146,13 @@ export default {
     watch: {
     },
     computed: {
-        ...mapState('vm', ['currentUserId', 'users', 'departments', 'listDepartments']),
+        ...mapState('vm', ['currentUser', 'users', 'departments', 'listDepartments']),
         filteredList() {
             //let list = this.dictionariesData.operators.filter(e => ((this.userName) ? (e.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) : true));
             let list = [];
             for (let id in this.users) {
                 let user = this.users[id];
+                if (this.task.departmentId && user.departmentId != this.task.departmentId) continue;
                 if (user.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) list.push(user);
             }
             if (!list.length) this.visibleListExecutor = false;
@@ -161,6 +161,7 @@ export default {
     },
     methods:
         {
+            ...mapActions('task', ['setLoaderState']),
             getUserName(id) {
                 if (!this.users[id]) return 'Не известный';
                 return this.users[id].name;
@@ -219,24 +220,21 @@ export default {
                 const self = this;
                 let response;
 
+                self.setLoaderState(true);
+
                 if (self.editTask) {
                     response = await apiTasks.put(self.task.id, self.task);
                 } else {
-                    delete self.task.id;
                     response = await apiTasks.post(self.task);
                 }
+
+                self.setLoaderState(false);
 
                 if (response.errorMessage) {
                     self.$root.showModalError(response);
                 } else {
                     if (this.buttonAction) this.buttonAction('save');
                     self.$emit('close');
-
-                    // if (!this.tasks[response.departmentId]) {
-                    //     this.tasks[response.departmentId] = [];
-                    // }
-                    // this.tasks[response.departmentId].push(response);
-
                 }
 
             },
@@ -246,6 +244,10 @@ export default {
                 this.visibleListExecutor = true;
                 this.userName = value;
                 this.task.executorId = 0;
+            },
+
+            resetUserName() {
+                this.userName = '';
             },
 
             // Выберите имя исполнителя
@@ -258,7 +260,7 @@ export default {
         },
 
     mounted() {
-        this.task.initiatorId = this.currentUserId;
+        this.task.initiatorId = this.currentUser.id;
         if (this.editTask) {
             this.task = this.editTask;
             this.userName = this.getUserName(this.task.executorId);
@@ -547,7 +549,7 @@ export default {
 
             textarea {
                 width: 84%;
-                margin-left: 25px;
+                /*margin-left: 25px;*/
                 margin-top: 20px;
             }
 

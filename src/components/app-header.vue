@@ -1,16 +1,16 @@
 <template>
   <div class="header-content" v-if="isPageReady">
     <img alt="" src="../assets/images/logo.png">
-    <nav>
-      <div class="menu-container">
-        <div class="menu-item">
-          <router-link tag="span" to="/vm">Задачи ВУЭ</router-link>
-        </div>
+    <nav style="min-width: 500px;">
+      <div class="menu-container" v-if="isAlive">
         <div class="menu-item">
           <router-link tag="span" to="/">
             <template v-if="$can('read', 'Tasks')">Задачи</template>
             <template v-else>Задачи&nbsp;(Рапорт)</template>
           </router-link>
+        </div>
+        <div class="menu-item">
+          <router-link tag="span" to="/vm">ВУЭ</router-link>
         </div>
         <div class="menu-item" v-if="$can('read', 'Analytics')">
           <router-link tag="span" to="/report">Аналитика</router-link>
@@ -49,14 +49,14 @@
           <router-link tag="span" to="/event-log">Журнал событий</router-link>
         </div>
         <div class="menu-item">
-          <a href="/РП-ЦП v.1.3.doc">Инструкция</a>
+          <a href="/docs/РП-ЦП v.1.3.doc">Инструкция</a>
         </div>
       </div>
     </nav>
     <div class="profile-foto">
       <img :src="foto" @error="fotoError=true"/>
     </div>
-    <div class="profile-fio">
+    <div class="profile-fio" v-if="isAlive">
       <span>{{ loginUser.name }}</span><br><br>
       <div class="user-role">{{ loginUser.roles[0].name }} / {{ loginUser.position }}</div>
     </div>
@@ -90,7 +90,7 @@ export default {
       }
       return stub_img;
     },
-    ...mapGetters(['isLogin', 'loginUser']),
+    ...mapGetters(['isLogin', 'loginUser', 'isAlive']),
     ...mapGetters('dict', ['dictionaryList']),
   },
   data() {
@@ -136,7 +136,7 @@ export default {
   nav {
     height: 100%;
     flex: 1 1 auto;
-    padding-left: 40px;
+    padding-left: 15px;
 
     .menu-container {
       position: absolute;

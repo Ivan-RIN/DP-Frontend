@@ -8,7 +8,7 @@ export default {
     },
 
     async getFile(address, data) {
-        return api.fetchApiFile(address, 'GET', data);
+        return api.fetchApiDownloadFile(address, 'GET', data);
     },
 
     async post(address, data) {
@@ -21,5 +21,9 @@ export default {
 
     async delete(address, data) {
         return api.fetchApi(address, 'DELETE', data);
+    },
+
+    async form(address, data) {
+        return api.fetchApiForm(address, data);
     },
 };

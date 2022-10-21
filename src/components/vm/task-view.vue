@@ -28,36 +28,36 @@
                         <div style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
                             <div>
                                 <div class="profile-foto">
-                                    <img :src="getFoto(task.initiatorId)" @error="errorFoto=true"/>
+                                    <img width="64" :src="getFoto(task.initiator.id)" @error="errorFoto($event.target)"/>
                                 </div>
                             </div>
                             <div>
-                                <div style="font-weight: bold;">{{ getUserName(task.initiatorId) }}</div>
-                                <div>{{ getUserTitle(task.initiatorId) }}</div>
-                                <div>{{ getUserDepartment(task.initiatorId) }}</div>
-                                <div><span v-html="getUseMail(task.initiatorId)"></span></div>
+                                <div style="font-weight: bold;">{{ getUserName(task.initiator.id) }}</div>
+                                <div>{{ getUserPost(task.initiator.id) }}</div>
+                                <div>{{ getUserDepartment(task.initiator.id) }}</div>
+                                <div><span v-html="getUseEmail(task.initiator.id)"></span></div>
                                 <div>
-                                    <span v-show="initiator.telephone">Тел.: {{ initiator.telephone }}</span>
-                                    <span v-show="initiator.telephone && initiator.mobile">,&nbsp;</span>
-                                    <span v-show="initiator.mobile">Сот.: {{ initiator.mobile }}</span>
+                                    <span v-show="task.initiator.telephone">Тел.: {{ task.initiator.telephone }}</span>
+                                    <span v-show="task.initiator.telephone && task.initiator.mobile">,&nbsp;</span>
+                                    <span v-show="task.initiator.mobile">Сот.: {{ task.initiator.mobile }}</span>
                                 </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
                             <div>
                                 <div class="profile-foto">
-                                    <img :src="getFoto(task.executorId)" @error="errorFoto=true"/>
+                                    <img width="64" :src="getFoto(task.executor.id)" @error="errorFoto($event.target)"/>
                                 </div>
                             </div>
                             <div>
-                                <div style="font-weight: bold;">{{ getUserName(task.executorId) }}</div>
-                                <div>{{ getUserTitle(task.executorId) }}</div>
-                                <div>{{ getUserDepartment(task.executorId) }}</div>
-                                <div><span v-html="getUseMail(task.executorId)"></span></div>
+                                <div style="font-weight: bold;">{{ getUserName(task.executor.id) }}</div>
+                                <div>{{ getUserPost(task.executor.id) }}</div>
+                                <div>{{ getUserDepartment(task.executor.id) }}</div>
+                                <div><span v-html="getUseEmail(task.executor.id)"></span></div>
                                 <div>
-                                    <span v-show="executor.telephone">Тел.: {{ executor.telephone }}</span>
-                                    <span v-show="executor.telephone && executor.mobile">,&nbsp;</span>
-                                    <span v-show="executor.mobile">Сот.: {{ executor.mobile }}</span>
+                                    <span v-show="task.executor.telephone">Тел.: {{ task.executor.telephone }}</span>
+                                    <span v-show="task.executor.telephone && task.executor.mobile">,&nbsp;</span>
+                                    <span v-show="task.executor.mobile">Сот.: {{ task.executor.mobile }}</span>
                                 </div>
                             </div>
                         </div>
@@ -77,18 +77,41 @@
                 </div>
                 <div class="line"></div>
                 <div class="body-row">
-                    <div>Ход выполнения задачи,<br>Комментарий к отчёту
-                    </div>
+                    <div>Ход выполнения задачи,<br>Комментарий к отчёту</div>
                     <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
-                        <div v-for="(comment, index) in comments" :key="comment.id" style="padding-bottom: 15px;">
+                        <div v-for="(comment, index) in getListComments" :key="comment.id"
+                             style="padding-bottom: 15px;">
                             <div style="padding: 2px;">
-                                #{{ index + 1 }} [{{ convertDate(comment.entryDate) }}] - {{
+                                {{ index + 1 }}. [{{ convertDate(comment.date) }}] - {{
                                     getUserName(comment.userId)
                                 }}
-                                <span style="float: right">Прогресс {{ comment.value }}% </span>
+                                <span style="float: right">Прогресс {{ comment.progress }}% </span>
                             </div>
-                            <div style="padding: 2px;">
-                                <textarea style="width: 100%;" disabled> {{ comment.comment }}</textarea>
+                            <div style="padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px; white-space: pre-line;">{{ comment.comment }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="body-row">
+                    <div>Загруженные файлы</div>
+                    <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
+                        <div v-for="(file, index) in task.files" :key="index" style="padding-bottom: 2px;">
+                            <div
+                                style="display: flex; padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px;">
+                                <img src="@/assets/icons/document-file.png" style="margin-right: 10px; cursor: pointer;"
+                                     @click="downloadFile(file)">
+                                <div style="width: 100%;">
+                                    <img
+                                        v-show="currentUser.id == task.initiator.id || currentUser.id == task.executor.id"
+                                        src="@/assets/icons/file-delete.png"
+                                        style="float: right; cursor: pointer; height: 32px;"
+                                        @click="deleteFile(file)"
+                                    >
+                                    <div @click="downloadFile(file)" style="cursor: pointer;">
+                                        {{ index + 1 }}. [{{ convertDate(file.date, true) }} -
+                                        {{ getUserName(file.ownerId) }}]<br>
+                                        {{ file.name }}, {{ getSize(file.size) }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -96,9 +119,13 @@
                 <div class="line"></div>
             </div>
             <div class="add-task-footer">
-                <div data-remove @click="removeTask()" v-show="user.id == task.initiatorId">Удалить</div>
-                <div data-remove @click="editTask()" v-show="user.id == task.initiatorId">Редактировать</div>
-                <div data-remove @click="сhangeProgress()" v-show="user.id == task.initiatorId || user.id == task.executorId">Зафиксировать работу</div>
+                <div data-remove @click="removeTask()" v-show="currentUser.id == task.initiator.id">Удалить</div>
+                <div data-remove @click="editTask()" v-show="currentUser.id == task.initiator.id">Редактировать</div>
+                <div data-remove @click="сhangeProgress()"
+                     v-show="currentUser.id == task.initiator.id || currentUser.id == task.executor.id">
+                    Зафиксировать работу
+                </div>
+                <div data-remove @click="downloadReport()">Загрузить отчет</div>
                 <div data-remove @click="$parent.closeViewTask()">Закрыть</div>
             </div>
         </div>
@@ -107,9 +134,9 @@
 
 <script>
 
+import { mapActions, mapState } from 'vuex';
 import VMTaskModal from '@/components/vm/task-dp-modal.vue';
 import VMTaskDialog from '@/components/vm/task-dialog.vue';
-import { mapState } from 'vuex';
 import stub_img from '@/assets/images/photo_stub.jpeg';
 import VMAddTaskForm from '@/components/vm/add-task-form';
 import apiTasks from '@/api/VM_Tasks/vm-tasks';
@@ -124,8 +151,7 @@ export default {
     },
     data() {
         return {
-            errorFoto: false,
-            comments: []
+            comments: [],
         };
     },
     props: {
@@ -136,19 +162,13 @@ export default {
     },
     getters: {},
     computed: {
-        ...mapState('vm', ['currentUserId', 'users', 'departments']),
-        user() {
-            return this.users[this.currentUserId];
-        },
-        initiator() {
-            return this.users[this.task.initiatorId];
-        },
-        executor() {
-            return this.users[this.task.executorId];
+        ...mapState('vm', ['currentUser', 'users', 'departments']),
+        getListComments() {
+            return this.task.comments.sort((a, b) => a.id > b.id ? 1 : -1);
         }
     },
     methods: {
-
+        ...mapActions('task', ['setLoaderState']),
         getState(state) {
             return ['Планируется', 'В работе', 'Выполнено', 'Просрочено', 'Отменено'][state];
         },
@@ -158,23 +178,19 @@ export default {
             return this.users[id].name;
         },
 
-        getUserTitle(id) {
+        getUserPost(id) {
             if (!this.users[id]) return '';
-            return this.users[id].title;
+            return this.users[id].post;
         },
 
-        getUseMail(id, link = true) {
+        getUseEmail(id, link = true) {
             if (!this.users[id]) return '';
-            return link ? '<a href="mailto:' + this.users[id].mail + '" style="color: #ffffff;">' + this.users[id].mail + '</a>' : this.users[id].mail;
-        },
-
-        getDepartment(id) {
-            return this.departments[id] ? this.departments[id].fullName : '';
+            return link ? '<a href="mailto:' + this.users[id].email + '" style="color: #ffffff;">' + this.users[id].email + '</a>' : this.users[id].email;
         },
 
         getUserDepartment(id) {
             if (!this.users[id] || !this.departments[this.users[id].departmentId]) return '';
-            return this.departments[this.users[id].departmentId].fullName;
+            return this.departments[this.users[id].departmentId].name;
         },
 
         getPriority(val) {
@@ -182,17 +198,33 @@ export default {
         },
 
         // Конвертировать дату
-        convertDate(date) {
-            return date ? date.split('T')[0].split('-')
+        convertDate(date, full = false) {
+            if (!date) return '';
+            let part = date.split('T');
+            part[0] = part[0].split('-')
                 .reverse()
-                .join('.') : '';
+                .join('.');
+            part[1] = part[1].split('.')[0];
+            if (full) {
+                return part[0] + ' ' + part[1];
+            } else {
+                return part[0];
+            }
         },
 
         getFoto(userId) {
-            if (!this.fotoError && this.users[userId]) {
-                return 'https://mail.gazprom-neft.local/ews/Exchange.asmx/s/GetUserPhoto?size=HR64x64&email=' + this.users[userId].mail;
-            }
-            return stub_img;
+            if (this.users[userId])
+                return 'https://mail.gazprom-neft.local/ews/Exchange.asmx/s/GetUserPhoto?size=HR64x64&email=' + this.users[userId].email;
+            else
+                return stub_img;
+        },
+
+        errorFoto(img) {
+            img.src = stub_img;
+        },
+
+        getSize: function (size) {
+            return size > 1048576 ? `${(size / 1048576).toFixed(2)}Mb.` : `${(size / 1024).toFixed(2)}Kb.`;
         },
 
         editTask() {
@@ -227,27 +259,81 @@ export default {
                     clickToClose: false
                 },
                 {
-                    save(data) {
 
-                        self.comments.push(data);
-                        let res = apiTasks.setProgress(data);
+                    async save(comment, files) {
 
-                        if (data.value == 100) {
+                        self.setLoaderState(true);
+
+                        if (comment) {
+                            let response = await apiTasks.appendComment(comment);
+                            self.task.comments.push(response.comment);
+                        }
+
+                        if (files) {
+                            let response = await apiTasks.appendFiles(files);
+                            self.task.files.push(...response.loadedFiles);
+                        }
+
+                        self.setLoaderState(false);
+
+                        if (comment.progress == 100) {
 
                             let options = {
                                 title: 'Внимание!',
                                 content: '<p>Вы установили прогресс выполнения задачи в 100%, состояние текущей задачи будет автоматически обновлен до статуса "Выполнено".</p>'
                             };
 
-                            self.$modal.show(taskMessage, options,
-                                {
-                                    height: 'auto',
-                                    width: '600px',
-                                    clickToClose: false
-                                })
+                            self.$modal.show(taskMessage, options, {
+                                height: 'auto',
+                                width: '600px',
+                                clickToClose: false
+                            });
                         }
+
                     }
                 });
+        },
+
+        downloadFile(file) {
+            let response = apiTasks.downloadFile(file.id, file.name);
+        },
+
+        async deleteFile(file) {
+
+            let self = this;
+
+            let options = {
+                title: 'Внимание!',
+                content: `<p>Вы действительно хотите удалить файл: "${file.name}"?</p>`
+            };
+
+            this.$modal.show(VMTaskDialog, options,
+                {
+                    height: 'auto',
+                    width: '600px',
+                    clickToClose: false
+                },
+                {
+                    async ok() {
+
+                        self.setLoaderState(true);
+                        let response = await apiTasks.deleteFile(file.id);
+                        self.setLoaderState(false);
+
+                        let index = self.task.files.indexOf(file);
+                        if (index !== -1) {
+                            self.task.files.splice(index, 1);
+                        }
+
+                        self.$emit('close');
+                    }
+                }
+            );
+        },
+
+        downloadReport() {
+            window.location.href = '/api/VM_Tasks/getReport/' + this.task.id;
+            //window.open('/api/VM_Tasks/getReport/' + this.task.id, '_blank');
         },
 
         // Удалить задачу
@@ -271,20 +357,12 @@ export default {
                 });
         },
 
-        async loadProgress() {
-            let res = await apiTasks.getProgress(this.task.id);
-            this.comments.push(...res);
-        }
-
     },
 
     created() {
-
     },
 
     mounted() {
-        this.loadProgress();
-        history.pushState(null, null, '/vm/' + this.task.id);
     }
 };
 </script>

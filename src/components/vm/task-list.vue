@@ -1,20 +1,21 @@
 <template>
     <div class="task-list">
-        <div>
-<!--            <dp-combobox-component-->
-<!--                :options="subdivisions"-->
-<!--                text-field="name"-->
-<!--                v-model="filterSubdivisions"/>-->
-<!--            &nbsp;&nbsp;-->
+        <div style="display: flex;">
             <select  v-model="filter">
                 <option :value="0" style="font-weight: bold;">Все</option>
                 <option
                     v-for="(department) in departments"
                     :key="department.id"
                     :value="department.id">
-                    {{ department.fullName }}
+                    {{ department.abbreviation }}
                 </option>
             </select>
+            <div style="width: 100%;">
+              <vm-task-action-component
+                  v-show="currentUser.roles.isDeveloper || currentUser.roles.isAdministrator || currentUser.roles.isSupervisor"
+                  @add="openAddTaskForm()"
+              />
+            </div>
         </div>
         <div class="line"></div>
         <div class="vm-task-list-header">
@@ -48,14 +49,16 @@
             >
                 Дата<br>создания
             </div>
+			<div style="width: 32px;"></div>
         </div>
         <div class=""
              v-for="(department, depId) in tasks"
              :key="depId"
-             v-if="!filter || filter == depId">
+             v-if="!filter || filter == depId"
+        >
             <div style="padding: 8px 8px 8px 8px; font-weight: bold; background-color: #0d304b; min-width: 170px; text-align: center;
             position: relative; top: 0px; display: inline-block; border-radius: 10px 10px 0 0; text-decoration: underline;">
-                {{ getNameDepartment(depId) }} {{ getParentDepartment(depId) }}
+                {{ getNameDepartment(depId) }} [{{ getNameParentDepartment(depId) }}]
             </div>
             <div class="vm-task-list-content-background" style="margin-bottom: 20px;">
                 <div class="vm-task-list-content"
@@ -70,21 +73,23 @@
                     </div>
                     <div class="row-col-3" style="text-align: left; display: flex; align-items: center;">
                         <div style="width: 32px;">
-                            <img v-if="task.state == 2" src="@/assets/icons/performed.png" width="20">
+                            <img v-if="task.state == 2" src="@/assets/icons/performed.png" width="24">
                             <img v-else v-show="task.priority == 1" src="@/assets/icons/fire.png" width="24">
-
                         </div>
                         <div>#{{ task.id }}. {{ task.name }}</div>
                     </div>
                     <div class="row-col-4">
-                        {{ getShortUserName(task.initiatorId) }}
+                        {{ getShortUserName(task.initiator) }}
                     </div>
                     <div class="row-col-5">
-                        {{ getShortUserName(task.executorId) }}
+                        {{ getShortUserName(task.executor) }}
                     </div>
                     <div class="row-col-6">
                         {{ convertDate(task.createDate) }}
                     </div>
+					<div style="width: 32px; text-align: center;">
+						<img v-if="task.count > 0" src="@/assets/icons/tasks-17824321.png" width="24">
+					</div>
                 </div>
             </div>
         </div>
@@ -96,7 +101,8 @@
 import { mapState } from 'vuex';
 import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import VMViewTask from '@/components/vm/task-view.vue';
-import apiTasks from '@/api/VM_Tasks/vm-tasks';
+import VMTaskActionComponent from '@/components/vm/task-action-component.vue';
+import VMAddTaskForm from '@/components/vm/add-task-form';
 
 export default {
     name: 'task-list-component',
@@ -114,6 +120,7 @@ export default {
         };
     },
     components: {
+        'vm-task-action-component': VMTaskActionComponent,
         DpComboboxComponent,
         VMViewTask
     },
@@ -123,14 +130,35 @@ export default {
         },
         openViewTask: {
             type: Function
+        },
+        buttonAction: {
+            type: Function
         }
     },
     mixins: [],
     computed: {
-        ...mapState('vm', ['currentUserId', 'users', 'departments']),
+        ...mapState('vm', ['currentUser', 'users', 'departments']),
     },
     watch: {},
     methods: {
+        // Форма добавления задачи
+        openAddTaskForm(options) {
+
+            let optionsNew = {};
+
+            if (options) {
+                optionsNew = options;
+            }
+
+            optionsNew.buttonAction = this.buttonAction;
+            optionsNew.tasks = this.tasks;
+
+            this.$modal.show(VMAddTaskForm, optionsNew, {
+                height: 'auto',
+                width: '800px',
+                clickToClose: false,
+            });
+        },
         overdueDateColor(state, executionDate) {
             let date = new Date(executionDate);
             let current = new Date();
@@ -143,23 +171,18 @@ export default {
             return date ? date.split('T')[0].split('-').reverse().join('.') : '';
         },
         getNameDepartment(id) {
-            return this.departments[id].name;
+            return this.departments[id].abbreviation;
         },
-        getParentDepartment(id) {
+        getNameParentDepartment(id) {
             const parentId = this.departments[id].parentId;
-            if (!parentId) return '';
-            return '(' + this.departments[parentId].name + ')';
+            if (!parentId) return 'Отсутствует';
+            return this.departments[parentId].abbreviation;
         },
-        getUserName(id) {
-            if (!this.users[id]) return 'Не известный';
-            return this.users[id].name;
-        },
-        getShortUserName(id) {
-            if (!this.users[id]) return 'Не известный';
-            let data = this.users[id].name.split(' ');
-            if (data.length == 2) return data[0] + ' ' + data[1][0] + '.';
-            if (data.length > 2) return data[0] + ' ' + data[1][0] + '.' + data[2][0] + '.';
-            return this.users[id].name;
+        getShortUserName(user) {
+            let fio = user.name.split(' ');
+            if (fio.length == 2) return fio[0] + ' ' + fio[1][0] + '.';
+            if (fio.length > 2) return fio[0] + ' ' + fio[1][0] + '.' + fio[2][0] + '.';
+            return user.name;
         },
         sortStringTasks(field) {
             this.sortFields[field] = !this.sortFields[field];
@@ -182,7 +205,7 @@ export default {
                     tasks.sort((a, b) => a[field] > b[field] ? 1 : -1);
                 }
             }
-        }
+        },
     },
     mounted() {
         history.pushState(null, null, '/vm');
@@ -473,17 +496,17 @@ input.Executor {
 }
 
 .row-col-3 {
-    flex: 0 0 530px;
+    flex: 0 0 540px;
     text-align: center;
 }
 
 .row-col-4 {
-    flex: 0 0 200px;
+    flex: 0 0 180px;
     text-align: center;
 }
 
 .row-col-5 {
-    flex: 0 0 200px;
+    flex: 0 0 180px;
     text-align: center;
 }
 

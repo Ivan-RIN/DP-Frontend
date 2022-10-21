@@ -3,7 +3,7 @@
   "version": "0.0.28",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --port 4846",
+    "serve": "vue-cli-service serve --port 4848",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "explore": "source-map-explorer dist/js/*.js"
@@ -11,7 +11,10 @@
   "dependencies": {
     "@casl/ability": "^3.2.0",
     "@casl/vue": "^0.5.1",
+    "@kiyoaki_w/vue-context": "^1.0.3",
+    "agentkeepalive": "^4.2.1",
     "chart.js": "^2.9.3",
+    "http-proxy-agent": "^5.0.0",
     "install": "^0.13.0",
     "lodash.debounce": "^4.0.8",
     "promise-polyfill": "^8.1.0",

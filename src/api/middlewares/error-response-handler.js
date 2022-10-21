@@ -2,6 +2,7 @@
 
 export default {
      async errorResponseHandler(response, method) {
+
         const statusOk = 200;
         const statusOkCreated = 201;
         const statusOkNoContent = 204;
@@ -11,7 +12,9 @@ export default {
         const statusInternalServerError = 500;
 
         if (response) {
+
             if (response.status.toString().startsWith('2')) {
+
                 if (method === 'DELETE') {
                     return {};
                 }
@@ -135,6 +138,7 @@ export default {
                 }
             }
         }
+
         return Promise.reject(response);
     },
 };

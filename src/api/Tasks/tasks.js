@@ -1,6 +1,6 @@
 import api from '../baseAPI';
 import utils from '../api-utils';
-// import TaskListComponent from '../../components/tasks/task-list-component.vue';
+// import TaskListComponent from '../../components/tasks/task-list.vue';
 
 const PATH = 'Tasks';
 
@@ -51,6 +51,11 @@ export default {
 
     async postTaskStatus(status, data) {
         const address = `${PATH}/status/${status}`;
+        return api.post(address, data);
+    },
+
+    async saveCriterions(data) {
+        const address = `${PATH}/saveCriterions`;
         return api.post(address, data);
     },
 

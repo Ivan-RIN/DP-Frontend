@@ -1,5 +1,5 @@
 <template>
-    <div v-if="performanceCriterions.length > 0">
+    <div v-if="!task.groupId && performanceCriterions.length > 0">
 <!--        <h3>Отчёт</h3>-->
         <div class="add-task-content-data-sop-criterions"
              v-for="(sop, indexSop) in performanceCriterions"
@@ -128,7 +128,6 @@
                             };
                         }
                     });
-
 
                     if (isValuesNotEmpty) {
                         this.task.values.forEach((itemValue) => {

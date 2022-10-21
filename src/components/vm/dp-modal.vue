@@ -1,0 +1,127 @@
+<template>
+    <div class="add-task" v-if="isHavePermission">
+        <div class="add-task-header">
+            <span><slot name="header"></slot></span>
+            <div class="add-task-header-close" @click="close()"></div>
+        </div>
+        <div class="add-task-content">
+            <slot name="body"></slot>
+        </div>
+        <div class="add-task-footer">
+            <slot name="footer">
+                <div data-save @click="save()">Сохранить</div>
+                <div data-save @click="close()">Закрыть</div>
+            </slot>
+        </div>
+    </div>
+    <div class="add-task" v-else>
+        <div class="add-task-header">
+            <div class="add-task-header-close" @click="close()"></div>
+        </div>
+        <div class="add-task-content text-center">
+            <img src="@/assets/images/noaccess.svg" width="64" height="64" alt="Доступ запрещен" />
+            <h4 class="pt-5">Ваша роль не позволяет произвести данное действие</h4>
+        </div>
+    </div>
+</template>
+
+<script>
+  export default {
+    name: 'dp-modal',
+    props: {
+      isHavePermission: {
+        type: Boolean,
+        default: true,
+      },
+    },
+
+    methods: {
+      close() {
+        this.$parent.$emit('close');
+      },
+
+      save() {
+        this.$parent.$emit('save');
+      },
+    },
+  };
+</script>
+
+<style scoped lang="scss">
+    @import "../../assets/styles/main";
+
+    .add-task {
+        position: relative;
+        width: 100%;
+        background-color: $form-background-color;
+        color: $text-color-01;
+        z-index: 1000;
+        overflow: auto;
+
+        &-header {
+            padding: 20px 0 20px 10px;
+            border-bottom: solid 1px $line-color;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+
+            span {
+                text-transform: uppercase;
+            }
+
+            &-close {
+                position: absolute;
+                right: 0;
+                top: 15px;
+                cursor: pointer;
+                &:after{
+                    content: "";
+                    background-image: url("../../assets/images/cross.svg");
+                    background-repeat: no-repeat;
+                    position: absolute;
+                    top: 3px;
+                    right: 10px;
+                    height: 24px;
+                    width: 24px;
+                }
+            }
+        }
+
+        &-content {
+            position: relative;
+            margin: 70px $default-margin ;
+            max-height: 90%;
+            overflow: hidden;
+
+            &-data {
+                display: flex;
+            }
+
+            &-data-periodic {
+                position: relative;
+                border: solid 1px $line-color;
+                border-top: none;
+            }
+        }
+
+        &-footer {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: right;
+            gap: 10px;
+
+            div[data-save] {
+                @extend %button;
+            }
+
+            div[data-close] {
+                color: $text-color-02;
+                padding: 5px 10px;
+                margin-left: 20px;
+                cursor: pointer;
+            }
+        }
+    }
+</style>
