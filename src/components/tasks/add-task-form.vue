@@ -1028,29 +1028,9 @@ export default {
 				let response;
 
 				if (me.task.periodic === 1) {
-
 					me.createRequestBody();
-
 					if (me.editTask) {
-
 						response = await apiTasks.put(me.task.id, me.task);
-
-						if (!response.errorMessage) {
-
-							// Save Criterions
-							let _list = [];
-							for (let key in me.tasksCriterions) {
-								let data = key.split('-');
-								_list.push({
-									taskId: data[0],
-									sOPId: data[1],
-									criterionId: data[2],
-									value: me.tasksCriterions[key]
-								});
-							}
-							if (_list.length > 0) response = await apiTasks.saveCriterions(_list);
-						}
-
 					} else {
 						response = await apiTasks.post(me.task);
 					}
@@ -1063,7 +1043,6 @@ export default {
 					}
 				} else {
 					this.createRequestBody();
-
 					try {
 						await apiTasks.postPlanTasks(me.task);
 						this.buttonAction('save');
@@ -1072,6 +1051,20 @@ export default {
 						console.warn(error);
 					}
 				}
+
+        // Save Criterions
+        let _list = [];
+        for (let key in me.tasksCriterions) {
+          let data = key.split('-');
+          _list.push({
+            taskId: data[0],
+            sOPId: data[1],
+            criterionId: data[2],
+            value: me.tasksCriterions[key]
+          });
+        }
+        if (_list.length > 0) response = await apiTasks.saveCriterions(_list);
+
 			},
 			async loadFile(id) {
 				await this.$root.downloadFile(id);

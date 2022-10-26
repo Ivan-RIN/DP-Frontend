@@ -92,12 +92,12 @@
 									</div>
 									<div data-col="4">
 										<div data-task-name>
-											<div v-show="index == 0 && category.grouped.length" @click="showCategoryTasks(category)"
-											     style="cursor: pointer; text-decoration: underline;">
-												[<span v-if="category.show">Свернуть</span>
-												<span v-else>Развернуть</span> +{{ category.grouped.length }}]<br>
-											</div>
 											<div @click="openEditTask(task)">{{ createShortText(task.name, 65) }}</div>
+                      <div v-show="index == 0 && category.grouped.length" @click="showCategoryTasks(category)"
+                           style="cursor: pointer; text-decoration: underline; color: #2296f3;">
+                        [<span v-if="category.show">Свернуть</span>
+                        <span v-else>Развернуть</span> +{{ category.grouped.length }}]<br>
+                      </div>
 										</div>
 										<div v-if="task.comment" data-task-comment>
 											<span>Комментарий к отчёту:</span>

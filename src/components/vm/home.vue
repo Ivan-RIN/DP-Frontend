@@ -9,12 +9,12 @@
             <button
                 :style="{backgroundColor: activeComponent == 'task-list' ? '#0c79cd' : ''}"
                 @click="activeComponent = 'task-list'">
-                Зачачи
+                Задачи
             </button>
             <button
                 :style="{backgroundColor: activeComponent == 'task-my-list' ? '#0c79cd' : ''}"
                 @click="activeComponent = 'task-my-list'">
-                 Мои Зачачи
+                 Мои Задачи
             </button>
             <button
                 :style="{backgroundColor: activeComponent == 'list-users' ? '#0c79cd' : ''}"

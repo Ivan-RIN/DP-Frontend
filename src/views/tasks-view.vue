@@ -290,7 +290,12 @@ export default {
 						bg.values.push(tcg);
 					}
 
-					if (tcg.values.length && e.groupId) {
+          let count = 0;
+					try {
+            count =  e.soPs[0].sop.criterions.length;
+          } catch {}
+
+          if (count > 1 && tcg.values.length && e.groupId) {
 						tcg.grouped.push(e);
 					} else {
 						tcg.values.push(e);
