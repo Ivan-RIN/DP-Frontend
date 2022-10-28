@@ -1,10 +1,12 @@
+
 import middleware from './middlewares/error-response-handler';
 
 const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
+    dtm: false,
     apiUrl(path) {
-        return API_URL + path;
+        return this.dtm ? API_URL + '/dtm/' + path : API_URL + '/api/' + path;
     },
     getHeaders() {
         return new Headers({

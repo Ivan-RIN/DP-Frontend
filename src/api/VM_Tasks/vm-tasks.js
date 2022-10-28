@@ -1,7 +1,7 @@
 import api from '../baseAPI';
 import utils from '../api-utils';
 
-const PATH = 'VM_Tasks';
+const PATH = 'Tasks';
 
 export default {
 

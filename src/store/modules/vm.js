@@ -1,16 +1,17 @@
 import api from '@/api/api';
+//import loginApi from '@/api/login-api';
 
 const downloadList = [
+	// {
+	// 	address: 'Tasks/getCurrentUser',
+	// 	commit: 'getCurrentUser'
+	// },
 	{
-		address: 'VM_Tasks/getCurrentUser',
-		commit: 'getCurrentUser'
-	},
-	{
-		address: 'VM_Tasks/getUsers',
+		address: 'Tasks/getUsers',
 		commit: 'getUsers'
 	},
 	{
-		address: 'VM_Tasks/getDepartments',
+		address: 'Tasks/getDepartments',
 		commit: 'getDepartments'
 	}
 ];
@@ -27,6 +28,13 @@ const getters = {
 };
 
 const actions = {
+	// async loginDtm({ commit }) {
+	// 	const user = await loginApi.loginDtm();
+	// 	if (Object.keys(user).length) {
+	// 		commit('setLogin', user);
+	// 	}
+	// 	commit('setIsLogin', true);
+	// },
 	loadAllVM({ commit, state }) {
 		downloadList.forEach(async (item) => {
 			if (item && item.address) {
@@ -34,6 +42,10 @@ const actions = {
 				commit(item.commit, data);
 			}
 		});
+	},
+	setCurrentUser({ commit }, currentUser) {
+		//commit('getCurrentUser', currentUser);
+		console.log(commit);
 	},
 	setRoles({ commit }) {
 		commit('setRoles');

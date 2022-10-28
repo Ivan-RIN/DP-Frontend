@@ -1,5 +1,6 @@
 import api from '../../api/login-api';
 import abilities from '../../config/ability';
+import vm from '@/store/modules/vm';
 
 const state = {
 	isLogin: false,
@@ -21,6 +22,14 @@ const actions = {
 		if (Object.keys(user).length) {
 			commit('setAbilityRules', abilities.setAbilities(user));
 			commit('setLogin', user);
+		}
+		commit('setIsLogin', true);
+	},
+	async loginDtm({ commit }) {
+		const user = await api.loginDtm();
+		if (Object.keys(user).length) {
+			commit('setLogin', user);
+			console.log(vm);
 		}
 		commit('setIsLogin', true);
 	},

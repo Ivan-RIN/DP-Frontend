@@ -25,6 +25,8 @@
 </template>
 
 <script>
+
+  import api from '@/api/api';
 	import { mapGetters, mapActions } from 'vuex';
 	import AppHeader from './components/app-header.vue';
 	import AppFooter from './components/app-footer.vue';
@@ -42,7 +44,11 @@
 			};
 		},
 		created() {
-			this.login();
+      if (this.$route.name == 'vm-tasks') {
+        api.dtm = true;
+        this.loginDtm();
+      } else
+			  this.login();
 		},
 		mounted() {
 			// this.$bus.$on('openModal',this.showModal);
@@ -54,7 +60,7 @@
 			...mapGetters(['isLogin', 'isAlive', 'abilityRules']),
 		},
 		methods: {
-			...mapActions(['login']),
+			...mapActions(['login', 'loginDtm']),
 		},
 		watch: {
 			isLogin() {
