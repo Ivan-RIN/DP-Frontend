@@ -33,7 +33,7 @@
 
 <script>
 
-import apiTasks from '@/api/VMTasks/vm-tasks';
+import apiTasks from '@/api/___VMTasks/vm-tasks';
 
 export default {
     name: 'vm-change-progress',

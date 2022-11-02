@@ -31,7 +31,7 @@
 
 import VMChangeProgress from '@/components/tasks/vm-change-progress';
 import VMAddTaskForm from '@/components/tasks/vm-add-task-form';
-import apiTasks from '@/api/VMTasks/vm-tasks';
+import apiTasks from '@/api/___VMTasks/vm-tasks';
 
 export default {
     name: 'vm-task-dp-modal',

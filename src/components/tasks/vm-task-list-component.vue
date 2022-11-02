@@ -97,7 +97,7 @@
 import { mapState } from 'vuex';
 import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import VMViewTask from '@/components/tasks/vm-task-view.vue';
-import apiTasks from '@/api/VMTasks/vm-tasks';
+import apiTasks from '@/api/___VMTasks/vm-tasks';
 
 export default {
     name: 'vm-task-list-component',

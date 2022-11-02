@@ -30,21 +30,29 @@
                     <div class="add-task-content-data-field" data-field>
                         <div data-name>Структурное подразделение:<span class="requiredField">*</span></div>
                         <div data-value>
-                            <dp-combobox
-                                :options="listDepartments"
-                                :textField="abbreviation"
-                                :isDisabled="!!editTask"
-                                text-field="fullName"
-                                v-model="task.departmentId"
-                                :resetValue="resetUserName"
-                            />
+	                        <select v-model="departmentParent" @change="task.departmentId = 0;">
+		                        <option style="color: darkgrey;" :value="null" disabled :selected="!departmentParent">Выберите значение</option>
+		                        <option
+			                        v-for="(department) in structureDepartments"
+			                        :key="department.id"
+			                        :value="department"
+		                        >
+			                        {{ department.abbreviation }}
+		                        </option>
+	                        </select>
                         </div>
-                        <div data-name>Тип:<span class="requiredField">*</span></div>
-                        <div data-value>
-                            <dp-combobox
-                                :options="[]"
-                                :isDisabled="true"
-                            />
+                        <div data-value style="margin-left: 10px;">
+	                        <select v-model="task.departmentId" style="margin-left: 5px;" v-if="departmentParent && departmentParent.childs.length">
+		                        <option style="color: darkgrey;" :value="0" disabled :selected="!task.departmentId">Выберите значение</option>
+		                        <option
+			                        v-for="(department) in departmentParent.childs"
+			                        :key="department.id"
+			                        :value="department.id"
+			                        :selected="task.departmentId == department.departmentId"
+		                        >
+			                        {{ department.abbreviation }}
+		                        </option>
+	                        </select>
                         </div>
                     </div>
                 </div>
@@ -140,21 +148,42 @@ export default {
             visibleListExecutor: false,
             userName: '',
             dateTo: new Date().toISOString().substr(0, 10),
-
+	        departmentParent: null,
+	        departmentCurrentId: 0
         };
     },
     watch: {
     },
     computed: {
-        ...mapState('vm', ['currentUser', 'users', 'departments', 'listDepartments']),
+        ...mapState('vm', ['currentUser', 'users', 'departments', 'listDepartments', 'structureDepartments']),
         filteredList() {
-            //let list = this.dictionariesData.operators.filter(e => ((this.userName) ? (e.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) : true));
-            let list = [];
-            for (let id in this.users) {
-                let user = this.users[id];
-                if (this.task.departmentId && user.departmentId != this.task.departmentId) continue;
-                if (user.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) list.push(user);
-            }
+	        let list = [];
+	        let departmentParentId = this.departmentParent ? this.departmentParent.id : 0;
+	        let departmentId = this.task.departmentId;
+	        if (departmentId) {
+		        for (let id in this.users) {
+			        let user = this.users[id];
+			        if (user.departmentId == departmentId)
+			            if (user.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) list.push(user);
+		        }
+	        } else {
+		        if (departmentParentId) {
+			        for (let id in this.users) {
+				        let user = this.users[id];
+				        if (user.departmentId) {
+					        let depParId = this.departments[user.departmentId].parentId;
+					        if (user.departmentId == departmentParentId || depParId == departmentParentId)
+						        if (user.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) list.push(user);
+				        }
+			        }
+		        } else {
+			        for (let id in this.users) {
+				        let user = this.users[id];
+				        if (user.name.toUpperCase().indexOf(this.userName.toUpperCase()) >= 0) list.push(user);
+			        }
+		        }
+	        }
+
             if (!list.length) this.visibleListExecutor = false;
             return list;
         },
@@ -186,7 +215,7 @@ export default {
                     isError = true;
                 }
 
-                if (!this.task.departmentId) {
+                if (!this.departmentParent) {
                     title = 'Ошибка';
                     message = 'Выберите: "Структурное подразделение"';
                     isError = true;
@@ -221,6 +250,9 @@ export default {
                 let response;
 
                 self.setLoaderState(true);
+
+	            if (!self.task.departmentId)
+		            self.task.departmentId =  this.departmentParent.id;
 
                 if (self.editTask) {
                     response = await apiTasks.put(self.task.id, self.task);
@@ -261,7 +293,9 @@ export default {
 
     mounted() {
         this.task.initiatorId = this.currentUser.id;
-        if (this.editTask) {
+	    let departmentParentId = this.departments[this.currentUser.departmentId].parentId;
+	    this.departmentParent = departmentParentId ? this.departments[departmentParentId] : this.departments[this.currentUser.departmentId];
+	    if (this.editTask) {
             this.task = this.editTask;
             this.userName = this.getUserName(this.task.executorId);
         }

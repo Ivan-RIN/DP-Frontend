@@ -4,49 +4,10 @@
     <nav style="min-width: 500px;">
       <div class="menu-container" v-if="isAlive">
         <div class="menu-item">
-          <router-link tag="span" to="/">
-            <template v-if="$can('read', 'Tasks')">Задачи</template>
-            <template v-else>Задачи&nbsp;(Рапорт)</template>
-          </router-link>
+          <router-link tag="span" to="/">Задачи</router-link>
         </div>
         <div class="menu-item">
           <router-link tag="span" to="/dtm">ВУЭ</router-link>
-        </div>
-        <div class="menu-item" v-if="$can('read', 'Analytics')">
-          <router-link tag="span" to="/report">Аналитика</router-link>
-        </div>
-        <div class="menu-item" v-if="$can('read', 'Dictionaries')">
-          Справочники
-          <div class="submenu-container" ref="dictsubmenu">
-            <div class="submenu-container-line"></div>
-            <div v-for="dict in dictionaryList"
-                 :key="dict.id"
-                 class="submenu-item"
-                 :class="{ 'submenu-item-active': dict.isActive}"
-                 @click="openDict(dict)"
-                 v-if="dict.isVisible"
-            >
-              {{ dict.name }}
-            </div>
-          </div>
-        </div>
-        <div v-if="$can('read', 'AttachFacilities')"
-             class="menu-item brigadeInFacilities"
-             @click="showAttachBrigadeInFacilities">
-          Закрепить объект
-        </div>
-        <div v-if="$can('read', 'AttachOperators')"
-             class="menu-item brigadeInFacilities"
-             @click="showAttachOperatorToBrigade">
-          Персонал
-        </div>
-        <div v-if="$can('read', 'ChangeHistory')"
-             class="menu-item tasksHistory">
-          <router-link tag="span" to="/history">История задач</router-link>
-        </div>
-        <div v-if="$can('read', 'EventLog')"
-             class="menu-item tasksHistory">
-          <router-link tag="span" to="/event-log">Журнал событий</router-link>
         </div>
         <div class="menu-item">
           <a href="/docs/РП-ЦП v.1.3.doc">Инструкция</a>
@@ -57,17 +18,9 @@
       <img :src="foto" @error="fotoError=true"/>
     </div>
     <div class="profile-fio" v-if="isAlive">
-      <span>{{ loginUser.name }}</span><br><br>
-      <div class="user-role">{{ loginUser.roles[0].name }} / {{ loginUser.position }}</div>
+      <span>{{ currentUser.name }}</span><br><br>
+      <div class="user-role">{{ currentUser.post }}</div>
     </div>
-    <!--<div class="settings">-->
-    <!--<img src="../assets/images/settings.png"  alt="settings"/>-->
-    <!--Настройки-->
-    <!--</div>-->
-    <!--<div class="logout">-->
-    <!--<img src="../assets/images/logout.png"  alt="logout"/>-->
-    <!--Выйти-->
-    <!--</div>-->
   </div>
   <div class="header-content" v-else>
     <img src="@/assets/images/logo.png" alt="logo">
@@ -81,17 +34,17 @@ import attachOperatorFormModal from './modals/attach-operator-to-brigade-form.vu
 import stub_img from '../assets/images/photo_stub.jpeg';
 
 export default {
-  name: 'app-header',
+  name: 'app-header-dtm',
   computed: {
       foto() {
       if (!this.fotoError) {
         return 'https://mail.gazprom-neft.local/ews/Exchange.asmx/s/GetUserPhoto?size=HR64x64&email='
-            + this.loginUser.email;
+            + this.currentUser.email;
       }
       return stub_img;
     },
     ...mapGetters(['isLogin', 'loginUser', 'isAlive']),
-    ...mapGetters('dict', ['dictionaryList']),
+    ...mapGetters('vm', ['currentUser']),
   },
   data() {
     return {
@@ -100,14 +53,10 @@ export default {
     };
   },
   methods: {
-    // setAltImg() {
-    // 	this.src = '../assets/images/photo_stub.jpeg';
-    // },
     openDict(dict) {
       if (dict.isActive) {
         this.$router.push({name: 'dictionary', params: {dictId: dict.id}});
       }
-      // console.log(this.$refs.dictsubmenu.style);
     },
     showAttachBrigadeInFacilities() {
       this.$modal.show(attachBrigadeFormModal, {}, {height: 800, width: 800, clickToClose: false});

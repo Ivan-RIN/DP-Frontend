@@ -109,7 +109,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import globalMethods from '@/mixins/global-methods';
-import apiTasks from '@/api/VMTasks/vm-tasks';
+import apiTasks from '@/api/___VMTasks/vm-tasks';
 //import apiFiles from '@/api/Files/files';
 import DatePickerComponent from '../common/date-picker-component.vue';
 import PerformanceCriterionsComponent from './performanceCriterionsComponent.vue';

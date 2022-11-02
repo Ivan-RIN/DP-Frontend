@@ -122,7 +122,7 @@ export default {
 
             await this.getTasksHistory();
 
-            if (this.currentUser.roles && this.currentUser.roles.isActive) {
+            if (this.currentUser.access && this.currentUser.access.isActive) {
 
                 const tasks = await apiTasks.getTasks(filter);
                 this.tasks = this.sortTasks(tasks);
@@ -162,7 +162,7 @@ export default {
         },
 
 		downloadReport() {
-			window.location.href = '/api/VM_Tasks/getReportTasks';
+			window.location.href = '/dtm/Tasks/getReportTasks';
 		},
 
     },

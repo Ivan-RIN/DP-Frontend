@@ -1,6 +1,8 @@
-import api from '../../api/login-api';
+
+import { mapActions, mapMutations } from 'vuex';
+import apiLogin from '../../api/login-api';
+import api from '../../api/api';
 import abilities from '../../config/ability';
-import vm from '@/store/modules/vm';
 
 const state = {
 	isLogin: false,
@@ -17,22 +19,25 @@ const getters = {
 };
 
 const actions = {
-	async login({ commit }) {
-		const user = await api.login();
-		if (Object.keys(user).length) {
-			commit('setAbilityRules', abilities.setAbilities(user));
-			commit('setLogin', user);
+	...mapActions('vm', ['setCurrentUser']),
+	async login({ commit }, root) {
+		if (root.isDtm) {
+			api.dtm = root.isDtm;
+			const user = await apiLogin.loginDtm();
+			if (Object.keys(user).length) {
+				await this.dispatch('vm/setCurrentUser', user);
+				commit('setAlive');
+			}
+		} else {
+			const user = await apiLogin.login();
+			if (Object.keys(user).length) {
+				commit('setAbilityRules', abilities.setAbilities(user));
+				commit('setLogin', user);
+				commit('setAlive');
+			}
 		}
 		commit('setIsLogin', true);
-	},
-	async loginDtm({ commit }) {
-		const user = await api.loginDtm();
-		if (Object.keys(user).length) {
-			commit('setLogin', user);
-			console.log(vm);
-		}
-		commit('setIsLogin', true);
-	},
+	}
 };
 
 const mutations = {
@@ -42,8 +47,10 @@ const mutations = {
 	setIsLogin(state, payload) {
 		state.isLogin = payload;
 	},
-	setLogin(state, payload) {
+	setAlive(state) {
 		state.isAlive = true;
+	},
+	setLogin(state, payload) {
 		state.loginUser = payload;
 	},
 };

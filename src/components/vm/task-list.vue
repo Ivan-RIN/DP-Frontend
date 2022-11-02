@@ -1,18 +1,28 @@
 <template>
     <div class="task-list">
         <div style="display: flex;">
-            <select  v-model="filter">
-                <option :value="0" style="font-weight: bold;">Все</option>
+            <select v-model="departmentParent" @change="departmentCurrentId = 0;">
+                <option :value="null" style="font-weight: bold;">Все задачи</option>
                 <option
-                    v-for="(department) in departments"
+                    v-for="(department) in structureDepartments"
                     :key="department.id"
-                    :value="department.id">
+                    :value="department"
+                >
                     {{ department.abbreviation }}
                 </option>
             </select>
+          <select v-model="departmentCurrentId" style="margin-left: 5px;" v-if="departmentParent">
+            <option :value="0" style="font-weight: bold;">Все задачи</option>
+            <option
+                v-for="(department) in departmentParent.childs"
+                :key="department.id"
+                :value="department.id">
+              {{ department.abbreviation }}
+            </option>
+          </select>
             <div style="width: 100%;">
               <vm-task-action-component
-                  v-show="currentUser.roles.isDeveloper || currentUser.roles.isAdministrator || currentUser.roles.isSupervisor"
+                  v-show="currentUser.access.isDeveloper || currentUser.access.isAdministrator || currentUser.access.isSupervisor"
                   @add="openAddTaskForm()"
               />
             </div>
@@ -54,11 +64,14 @@
         <div class=""
              v-for="(department, depId) in tasks"
              :key="depId"
-             v-if="!filter || filter == depId"
+             v-if="!departmentParent ||
+             (departmentParent && !departmentCurrentId && departmentParent.id == departments[depId].parentId) ||
+             (departmentCurrentId && departmentCurrentId == depId) ||
+			 (departmentParent && departmentParent.id == depId)"
         >
             <div style="padding: 8px 8px 8px 8px; font-weight: bold; background-color: #0d304b; min-width: 170px; text-align: center;
             position: relative; top: 0px; display: inline-block; border-radius: 10px 10px 0 0; text-decoration: underline;">
-                {{ getNameDepartment(depId) }} [{{ getNameParentDepartment(depId) }}]
+	            {{ getNameDepartment(depId) }} <span v-if="hasParentDepartment(depId)">[{{ getNameParentDepartment(depId) }}]</span>
             </div>
             <div class="vm-task-list-content-background" style="margin-bottom: 20px;">
                 <div class="vm-task-list-content"
@@ -116,7 +129,8 @@ export default {
                 executor: false,
                 createDate: false
             },
-            filter: 0
+            departmentParent: null,
+            departmentCurrentId: 0
         };
     },
     components: {
@@ -137,7 +151,7 @@ export default {
     },
     mixins: [],
     computed: {
-        ...mapState('vm', ['currentUser', 'users', 'departments']),
+        ...mapState('vm', ['currentUser', 'users', 'departments', 'structureDepartments']),
     },
     watch: {},
     methods: {
@@ -173,6 +187,9 @@ export default {
         getNameDepartment(id) {
             return this.departments[id].abbreviation;
         },
+	    hasParentDepartment(id) {
+        	return !!this.departments[id].parentId;
+	    },
         getNameParentDepartment(id) {
             const parentId = this.departments[id].parentId;
             if (!parentId) return 'Отсутствует';
@@ -206,9 +223,21 @@ export default {
                 }
             }
         },
+	    departmentParentField() {
+        	this.departmentCurrentId = 0;
+	    }
     },
     mounted() {
-        history.pushState(null, null, '/vm');
+        history.pushState(null, null, '/dtm');
+        if (this.currentUser.departmentId) {
+          let dep = this.departments[this.currentUser.departmentId];
+          if (dep.parentId) {
+            this.departmentParent = this.departments[dep.parentId];
+            this.departmentCurrentId = dep.id;
+          } else {
+	          this.departmentParent = dep;
+          }
+        }
     }
 };
 

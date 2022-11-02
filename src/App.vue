@@ -2,8 +2,11 @@
 	<div id="app">
 		<loading-mask-component v-if="!isPageReady"></loading-mask-component>
 		<template>
-			<header>
+			<header v-if="!isDtm">
 				<app-header></app-header>
+			</header>
+			<header v-else>
+				<app-header-dtm></app-header-dtm>
 			</header>
 			<div class="header-stub"></div>
 			<main role="main" v-if="isPageReady">
@@ -26,29 +29,30 @@
 
 <script>
 
-  import api from '@/api/api';
 	import { mapGetters, mapActions } from 'vuex';
 	import AppHeader from './components/app-header.vue';
+	import AppHeaderDtm from './components/app-header-dtm.vue';
 	import AppFooter from './components/app-footer.vue';
 	import LoadingMaskComponent from './components/common/loading-mask-component.vue';
+
+	const DtmList = ['DtmTasks', 'DtmTask'];
 
 	export default {
 		components: {
 			AppFooter,
 			AppHeader,
+			AppHeaderDtm,
 			LoadingMaskComponent,
 		},
 		data() {
 			return {
+				isDtm: false,
 				isPageReady: false,
 			};
 		},
 		created() {
-      if (this.$route.name == 'vm-tasks') {
-        api.dtm = true;
-        this.loginDtm();
-      } else
-			  this.login();
+			this.isDtm = DtmList.indexOf(this.$route.name) != -1;
+			this.login(this);
 		},
 		mounted() {
 			// this.$bus.$on('openModal',this.showModal);
@@ -60,7 +64,7 @@
 			...mapGetters(['isLogin', 'isAlive', 'abilityRules']),
 		},
 		methods: {
-			...mapActions(['login', 'loginDtm']),
+			...mapActions(['login']),
 		},
 		watch: {
 			isLogin() {

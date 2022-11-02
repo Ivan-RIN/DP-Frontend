@@ -45,13 +45,13 @@ export default new Router({
 			component: EventLog,
 		},
 		{
-			path: '/vm',
-			name: 'vm-tasks',
+			path: '/dtm',
+			name: 'DtmTasks',
 			component: VmTasks
 		},
 		{
-			path: '/vm/:taskId',
-			name: 'vm-tasks',
+			path: '/dtm/:taskId',
+			name: 'DtmTask',
 			component: VmTasks
 		}
 	],

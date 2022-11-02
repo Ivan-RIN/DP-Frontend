@@ -1,18 +1,17 @@
 import api from '@/api/api';
-//import loginApi from '@/api/login-api';
 
 const downloadList = [
 	// {
 	// 	address: 'Tasks/getCurrentUser',
-	// 	commit: 'getCurrentUser'
+	// 	commit: 'setCurrentUser'
 	// },
 	{
 		address: 'Tasks/getUsers',
-		commit: 'getUsers'
+		commit: 'setUsers'
 	},
 	{
 		address: 'Tasks/getDepartments',
-		commit: 'getDepartments'
+		commit: 'setDepartments'
 	}
 ];
 
@@ -20,21 +19,15 @@ const state = {
 	currentUser: null,
 	users: {},
 	departments: {},
+	structureDepartments: [],
 	listDepartments: []
 };
 
 const getters = {
-	//sectors: state => state.sectors
+	currentUser: state => state.currentUser
 };
 
 const actions = {
-	// async loginDtm({ commit }) {
-	// 	const user = await loginApi.loginDtm();
-	// 	if (Object.keys(user).length) {
-	// 		commit('setLogin', user);
-	// 	}
-	// 	commit('setIsLogin', true);
-	// },
 	loadAllVM({ commit, state }) {
 		downloadList.forEach(async (item) => {
 			if (item && item.address) {
@@ -44,8 +37,7 @@ const actions = {
 		});
 	},
 	setCurrentUser({ commit }, currentUser) {
-		//commit('getCurrentUser', currentUser);
-		console.log(commit);
+		commit('setCurrentUser', currentUser);
 	},
 	setRoles({ commit }) {
 		commit('setRoles');
@@ -53,18 +45,35 @@ const actions = {
 };
 
 const mutations = {
-	getCurrentUser(state, payload) {
+
+	setCurrentUser(state, payload) {
 		state.currentUser = payload;
 	},
-	getUsers(state, payload) {
+
+	setUsers(state, payload) {
 		for(let user of payload) {
 			state.users[user.id] = user;
 		}
 	},
-	getDepartments(state, payload) {
+
+	setDepartments(state, payload) {
+
+		state.listDepartments.push(...payload);
+
 		for(let department of payload) {
+			department.childs = [];
+			department.parent = null;
 			state.departments[department.id] = department;
-			state.listDepartments.push(department);
+		}
+
+		for(let department of payload) {
+			if (department.parentId) {
+				let parentId = department.parentId;
+				let parent = state.departments[parentId];
+				parent.childs.push(department);
+			} else {
+				state.structureDepartments.push(department);
+			}
 		}
 	}
 };
