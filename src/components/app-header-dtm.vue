@@ -37,7 +37,7 @@ export default {
   name: 'app-header-dtm',
   computed: {
       foto() {
-      if (!this.fotoError) {
+      if (this.currentUser && !this.fotoError) {
         return 'https://mail.gazprom-neft.local/ews/Exchange.asmx/s/GetUserPhoto?size=HR64x64&email='
             + this.currentUser.email;
       }

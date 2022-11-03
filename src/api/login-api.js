@@ -6,6 +6,6 @@ export default
 		return api.fetchApi('UserProfiles/current/', 'GET');
 	},
 	async loginDtm() {
-		return api.fetchApi('Tasks/getCurrentUser', 'GET');
+		return api.fetchApi('Loader/getCurrentUser', 'GET');
 	},
 };

@@ -1,24 +1,36 @@
 import api from '@/api/api';
 
 const downloadList = [
-	// {
-	// 	address: 'Tasks/getCurrentUser',
-	// 	commit: 'setCurrentUser'
-	// },
+
 	{
-		address: 'Tasks/getUsers',
+		address: 'Loader/getOrganizations',
+		commit: 'setOrganizations'
+	},
+	{
+		address: 'Loader/getDepartments',
+		commit: 'setDepartments'
+	},
+	{
+		address: 'Loader/getUsers',
 		commit: 'setUsers'
 	},
 	{
-		address: 'Tasks/getDepartments',
-		commit: 'setDepartments'
-	}
+		address: 'Loader/getBoards',
+		commit: 'setBoards'
+	},
+	{
+		address: 'Loader/getBoardRoles',
+		commit: 'setBoardRoles'
+	},
 ];
 
 const state = {
 	currentUser: null,
 	users: {},
+	organizations: {},
 	departments: {},
+	boards: {},
+	boardRoles: {},
 	structureDepartments: [],
 	listDepartments: []
 };
@@ -45,37 +57,56 @@ const actions = {
 };
 
 const mutations = {
-
 	setCurrentUser(state, payload) {
 		state.currentUser = payload;
 	},
-
-	setUsers(state, payload) {
-		for(let user of payload) {
-			state.users[user.id] = user;
+	setOrganizations(state, payload) {
+		for(let item of payload) {
+			state.organizations[item.id] = item;
 		}
 	},
-
 	setDepartments(state, payload) {
 
 		state.listDepartments.push(...payload);
 
-		for(let department of payload) {
-			department.childs = [];
-			department.parent = null;
-			state.departments[department.id] = department;
+		let departments = {};
+
+		for(let item of payload) {
+			item.childs = [];
+			item.relatives = [item.id];
+			item.parent = null;
+			departments[item.id] = item;
 		}
 
-		for(let department of payload) {
-			if (department.parentId) {
-				let parentId = department.parentId;
+		for(let item of payload) {
+			if (item.parentId) {
+				let parentId = item.parentId;
 				let parent = state.departments[parentId];
-				parent.childs.push(department);
+				item.parent = parent;
+				parent.childs.push(item);
+				parent.relatives.push(item.id);
 			} else {
-				state.structureDepartments.push(department);
+				state.structureDepartments.push(item);
 			}
 		}
-	}
+
+		state.departments = departments;
+	},
+	setUsers(state, payload) {
+		for(let item of payload) {
+			state.users[item.id] = item;
+		}
+	},
+	setBoards(state, payload) {
+		for(let item of payload) {
+			state.boards[item.id] = item;
+		}
+	},
+	setBoardRoles(state, payload) {
+		for(let item of payload) {
+			state.boardRoles[item.boardId] = item.roleId;
+		}
+	},
 };
 
 export default
