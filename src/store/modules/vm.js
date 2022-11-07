@@ -26,6 +26,7 @@ const downloadList = [
 
 const state = {
 	currentUser: null,
+	listUsers: [],
 	users: {},
 	organizations: {},
 	departments: {},
@@ -39,12 +40,21 @@ const getters = {
 	currentUser: state => state.currentUser
 };
 
+let count = 0;
+
 const actions = {
-	loadAllVM({ commit, state }) {
+
+	loadAllVM({ commit, state }, downloadEvent) {
 		downloadList.forEach(async (item) => {
 			if (item && item.address) {
+				count ++;
 				const data = await api.fetchApi(item.address, 'GET');
 				commit(item.commit, data);
+				count --;
+				if (!count) {
+					commit('downloadCompleted');
+					downloadEvent();
+				}
 			}
 		});
 	},
@@ -72,6 +82,7 @@ const mutations = {
 		let departments = {};
 
 		for(let item of payload) {
+			item.users = [];
 			item.childs = [];
 			item.relatives = [item.id];
 			item.parent = null;
@@ -81,8 +92,8 @@ const mutations = {
 		for(let item of payload) {
 			if (item.parentId) {
 				let parentId = item.parentId;
-				let parent = state.departments[parentId];
-				item.parent = parent;
+				let parent = departments[parentId];
+				//item.parent = parent;
 				parent.childs.push(item);
 				parent.relatives.push(item.id);
 			} else {
@@ -93,6 +104,7 @@ const mutations = {
 		state.departments = departments;
 	},
 	setUsers(state, payload) {
+		state.listUsers.push(...payload);
 		for(let item of payload) {
 			state.users[item.id] = item;
 		}
@@ -107,6 +119,21 @@ const mutations = {
 			state.boardRoles[item.boardId] = item.roleId;
 		}
 	},
+	downloadCompleted(state) {
+		console.log('- Download Completed -');
+		for (let id in state.users) {
+			let user = state.users[id];
+			if (user.departmentId) {
+				let dep = state.departments[user.departmentId];
+				dep.users.push(user);
+				while (dep.parentId) {
+					dep = state.departments[dep.parentId];
+					dep.users.push(user);
+				}
+				//user.department = dep;
+			}
+		}
+	}
 };
 
 export default

@@ -25,7 +25,7 @@
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'app-footer',
+    name: 'app-footer-dtm',
     computed:
         {
             ...mapGetters(['version']),

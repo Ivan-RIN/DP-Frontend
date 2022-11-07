@@ -2,11 +2,9 @@
 	<div id="app">
 		<loading-mask-component v-if="!isPageReady"></loading-mask-component>
 		<template>
-			<header v-if="!isDtm">
-				<app-header></app-header>
-			</header>
-			<header v-else>
-				<app-header-dtm></app-header-dtm>
+			<header>
+				<app-header v-if="!isDtm"></app-header>
+				<app-header-dtm v-else></app-header-dtm>
 			</header>
 			<div class="header-stub"></div>
 			<main role="main" v-if="isPageReady">
@@ -20,7 +18,8 @@
 			</main>
 			<main role="main" v-else></main>
 			<footer>
-				<app-footer></app-footer>
+				<app-footer-dtm v-if="isDtm"></app-footer-dtm>
+				<app-footer v-else></app-footer>
 			</footer>
 		</template>
 		<modals-container/>
@@ -33,15 +32,17 @@
 	import AppHeader from './components/app-header.vue';
 	import AppHeaderDtm from './components/app-header-dtm.vue';
 	import AppFooter from './components/app-footer.vue';
+	import AppFooterDtm from './components/app-footer-dtm.vue';
 	import LoadingMaskComponent from './components/common/loading-mask-component.vue';
 
 	const DtmList = ['DtmTasks', 'DtmTask'];
 
 	export default {
 		components: {
-			AppFooter,
 			AppHeader,
 			AppHeaderDtm,
+			AppFooter,
+			AppFooterDtm,
 			LoadingMaskComponent,
 		},
 		data() {

@@ -33,6 +33,7 @@
             <div class="line"></div>
             <component :is="activeComponent" v-if="isActive"
                        :tasks="tasks"
+                       :boards="boards"
                        :task="task"
                        :users="users"
                        :openViewTask="openViewTask"
@@ -54,7 +55,7 @@
 
 import { mapActions, mapState } from 'vuex';
 import LoadingMaskComponent from '../common/loading-mask-component.vue';
-import apiTasks from '../../api/VM_Tasks/vm-tasks';
+import api from '@/api/baseAPI';
 //import VMTaskFilterComponent from '@/components/vm/task-filter-component.vue';
 import TaskList from '@/components/vm/task-list.vue';
 import TaskMyList from '@/components/vm/task-my-list.vue';
@@ -74,6 +75,7 @@ export default {
     props: {},
     data() {
         return {
+	        boards: [],
             tasks: {},
             task: {},
             taskDisabled: true,
@@ -120,14 +122,12 @@ export default {
 
             this.setLoaderState(true);
 
-            await this.getTasksHistory();
-
             if (this.currentUser.access && this.currentUser.access.isActive) {
 
-                const tasks = await apiTasks.getTasks(filter);
-                this.tasks = this.sortTasks(tasks);
+                this.boards = await api.get('Loader/getBoards');
+                //this.tasks = this.sortTasks(tasks);
 
-                this.checkSelectedTask(tasks);
+                this.checkSelectedTask();
                 this.isActive = true;
             }
 
@@ -144,12 +144,14 @@ export default {
             this.activeComponent = 'task-list';
         },
 
-        checkSelectedTask(tasks) {
+        checkSelectedTask() {
             if (this.$route.params.taskId) {
-                for (let task of tasks) {
-                    if (task.id == this.$route.params.taskId) {
-                        this.openViewTask(task);
-                        break;
+                for (let board of this.boards) {
+	                for (let task of board.tasks) {
+		                if (task.id == this.$route.params.taskId) {
+			                this.openViewTask(task);
+			                break;
+		                }
                     }
                 }
             }
@@ -167,10 +169,13 @@ export default {
 
     },
     mounted() {
-        this.loadData(this.filterState);
+        //this.loadData(this.filterState);
     },
     created() {
-        this.loadAllVM();
+    	const self = this;
+        this.loadAllVM(function () {
+	        self.loadData(self.filterState);
+        });
     },
 
 };

@@ -1,31 +1,53 @@
 <template>
     <div class="task-list">
         <div style="display: flex;">
-            <select v-model="departmentParent" @change="departmentCurrentId = 0;">
-                <option :value="null" style="font-weight: bold;">Все задачи</option>
+	        <select v-if="listDepartments.length">
+		        <option :value="null" disabled selected style="font-weight: bold;">
+			        {{ listDepartments[0].abbreviation }}
+		        </option>
+	        </select>
+	        <template v-for="department in listDepartments" v-if="department.childs.length">
+		        <select style="margin-left: 5px;" @change="setListDepartments($event.target.value);">
+	                <option :value="department.id" style="font-weight: bold;">Все</option>
+	                <option
+	                    v-for="(dep) in department.childs"
+	                    :key="dep.id"
+	                    :value="dep.id"
+	                >
+	                    {{ dep.abbreviation }}
+	                </option>
+	            </select>
+	        </template>
+	        <select style="margin-left: 5px;" v-model="selectBoardId" @change="">
+                <option :value="0" style="font-weight: bold;">Все задачи</option>
                 <option
-                    v-for="(department) in structureDepartments"
-                    :key="department.id"
-                    :value="department"
+                    v-for="board in boards"
+                    v-if="isDepartmentBoard(board.departments)"
+                    :key="board.id"
+                    :value="board.id"
                 >
-                    {{ department.abbreviation }}
+                    {{ board.name }}
                 </option>
             </select>
-          <select v-model="departmentCurrentId" style="margin-left: 5px;" v-if="departmentParent">
-            <option :value="0" style="font-weight: bold;">Все задачи</option>
-            <option
-                v-for="(department) in departmentParent.childs"
-                :key="department.id"
-                :value="department.id">
-              {{ department.abbreviation }}
-            </option>
-          </select>
-            <div style="width: 100%;">
-              <vm-task-action-component
-                  v-show="currentUser.access.isDeveloper || currentUser.access.isAdministrator || currentUser.access.isSupervisor"
-                  @add="openAddTaskForm()"
-              />
-            </div>
+<!--            <select v-model="departmentParent" @change="departmentCurrentId = 0;">-->
+<!--                <option :value="null" style="font-weight: bold;">Все задачи</option>-->
+<!--                <option-->
+<!--                    v-for="(department) in structureDepartments"-->
+<!--                    :key="department.id"-->
+<!--                    :value="department"-->
+<!--                >-->
+<!--                    {{ department.abbreviation }}-->
+<!--                </option>-->
+<!--            </select>-->
+<!--          <select v-model="departmentCurrentId" style="margin-left: 5px;" v-if="departmentParent">-->
+<!--            <option :value="0" style="font-weight: bold;">Все задачи</option>-->
+<!--            <option-->
+<!--                v-for="(department) in departmentParent.childs"-->
+<!--                :key="department.id"-->
+<!--                :value="department.id">-->
+<!--              {{ department.abbreviation }}-->
+<!--            </option>-->
+<!--          </select>-->
         </div>
         <div class="line"></div>
         <div class="vm-task-list-header">
@@ -47,39 +69,43 @@
             <div class="row-col-4" style="cursor: pointer;"
                  @click="sortTasks('initiatorId')"
             >
-                Инициатор /<br>Автор
+                Инициатор
             </div>
             <div class="row-col-5" style="cursor: pointer;"
                  @click="sortTasks('executorId')"
             >
-                Ответственный /<br>Исполнитель
+                Исполнитель
             </div>
             <div class="row-col-6" style="cursor: pointer;"
                  @click="sortTasks('createDate')"
             >
-                Дата<br>создания
+                Дата создания
             </div>
 			<div style="width: 32px;"></div>
         </div>
-        <div class=""
-             v-for="(department, depId) in tasks"
-             :key="depId"
-             v-if="!departmentParent ||
-             (departmentParent && !departmentCurrentId && departmentParent.id == departments[depId].parentId) ||
-             (departmentCurrentId && departmentCurrentId == depId) ||
-			 (departmentParent && departmentParent.id == depId)"
+        <div style="position: relative;"
+             v-for="board in boards"
+             :key="board.id"
+             v-if="!selectBoardId || selectBoardId == board.id"
         >
+	        <div style="height: 33px;"></div>
             <div style="padding: 8px 8px 8px 8px; font-weight: bold; background-color: #0d304b; min-width: 170px; text-align: center;
-            position: relative; top: 0px; display: inline-block; border-radius: 10px 10px 0 0; text-decoration: underline;">
-	            {{ getNameDepartment(depId) }} <span v-if="hasParentDepartment(depId)">[{{ getNameParentDepartment(depId) }}]</span>
+            position: absolute; top: 0px; display: inline-block; border-radius: 10px 10px 0 0; text-decoration: underline;">
+	            {{ board.name }}
             </div>
+	        <add-task-button
+		        :user = "currentUser"
+		        :boardId="board.id"
+		        :action="openAddTaskForm"
+	        ></add-task-button>
             <div class="vm-task-list-content-background" style="margin-bottom: 20px;">
-                <div class="vm-task-list-content"
-                     v-for="task in department"
+	            <template v-if="board.tasks.length > 0">
+                    <div class="vm-task-list-content"
+                     v-for="task in board.tasks"
                      :key="task.id"
                      @click="openViewTask(task)">
                     <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.executionDate) }">
-                        {{ convertDate(task.executionDate) }}
+                        {{ convertDate(task.endDate) }}
                     </div>
                     <div class="row-col-2">
                         {{ task.progress }}%
@@ -92,10 +118,10 @@
                         <div>#{{ task.id }}. {{ task.name }}</div>
                     </div>
                     <div class="row-col-4">
-                        {{ getShortUserName(task.initiator) }}
+                        {{ getShortUserName(task.initiatorId) }}
                     </div>
                     <div class="row-col-5">
-                        {{ getShortUserName(task.executor) }}
+                        {{ getShortUserName(task.executorId) }}
                     </div>
                     <div class="row-col-6">
                         {{ convertDate(task.createDate) }}
@@ -104,6 +130,10 @@
 						<img v-if="task.count > 0" src="@/assets/icons/tasks-17824321.png" width="24">
 					</div>
                 </div>
+	            </template>
+	            <template v-else>
+					<div style="padding: 10px 20px; font-weight: bold;">Список задач пуст</div>
+	            </template>
             </div>
         </div>
     </div>
@@ -116,6 +146,7 @@ import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import VMViewTask from '@/components/vm/task-view.vue';
 import VMTaskActionComponent from '@/components/vm/task-action-component.vue';
 import VMAddTaskForm from '@/components/vm/add-task-form';
+import AddTaskButton from '@/components/vm/add-task-button';
 
 export default {
     name: 'task-list-component',
@@ -129,19 +160,26 @@ export default {
                 executor: false,
                 createDate: false
             },
+	        listDepartments: [],
             departmentParent: null,
-            departmentCurrentId: 0
+            departmentCurrentId: 0,
+	        selectBoardId: 0
         };
     },
     components: {
         'vm-task-action-component': VMTaskActionComponent,
         DpComboboxComponent,
-        VMViewTask
+        VMViewTask,
+	    VMAddTaskForm,
+	    AddTaskButton
     },
     props: {
         tasks: {
             type: Object
         },
+	    boards: {
+        	type: Array
+	    },
         openViewTask: {
             type: Function
         },
@@ -195,7 +233,8 @@ export default {
             if (!parentId) return 'Отсутствует';
             return this.departments[parentId].abbreviation;
         },
-        getShortUserName(user) {
+        getShortUserName(userId) {
+        	let user = this.users[userId];
             let fio = user.name.split(' ');
             if (fio.length == 2) return fio[0] + ' ' + fio[1][0] + '.';
             if (fio.length > 2) return fio[0] + ' ' + fio[1][0] + '.' + fio[2][0] + '.';
@@ -225,6 +264,33 @@ export default {
         },
 	    departmentParentField() {
         	this.departmentCurrentId = 0;
+	    },
+	    getListTasks(depId) {
+        	//!departmentParent || (departmentCurrentId && departmentCurrentId == depId)
+		    //let dep = this.departments[this.departmentCurrentId];
+		    //console.log(this.departmentCurrentId.relatives, depId);
+		    //return this.departmentCurrentId.relatives.indexOf(depId) != -1;
+		    return true;
+	    },
+	    isDepartmentBoard(departments) {
+        	console.log('this.departmentCurrentId', this.departmentCurrentId)
+        	for(let dep of departments) {
+		        if (dep.departmentId == this.departmentCurrentId) return true;
+	        }
+        	return false;
+	    },
+	    setListDepartments(id) {
+		    this.listDepartments.length = 0;
+        	if (this.departments[id]) {
+		        let dep = this.departments[id];
+		        this.departmentCurrentId = dep.id;
+		        while (dep) {
+			        this.listDepartments.unshift(dep);
+			        if (dep.parentId)
+			            dep = this.departments[dep.parentId];
+			        else dep = null;
+		        }
+	        }
 	    }
     },
     mounted() {
@@ -238,6 +304,8 @@ export default {
 	          this.departmentParent = dep;
           }
         }
+	    this.departmentCurrentId = 4;
+	    this.listDepartments.push(this.departments[4]);
     }
 };
 
