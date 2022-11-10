@@ -5,127 +5,143 @@
                 <span>Обзор / Доска задачи</span>
                 <div class="add-task-header-close" @click="$parent.closeViewTask()"></div>
             </div>
-            <div class="add-task-content">
-                <div class="body-row">
-                    <div>Номер задачи / ID</div>
-                    <div>#{{ task.id }}</div>
-                </div>
-                <div class="body-row">
-                    <div>Статус</div>
-                    <div>{{ getState(task.state) }}</div>
-                </div>
-                <div class="body-row">
-                    <div>Задача</div>
-                    <div style="padding: 10px; background-color: #0d304b;">{{ task.name }}</div>
-                </div>
-                <div class="body-row">
-                    <div>Описание</div>
-                    <div style="padding: 10px; background-color: #0d304b;">{{ task.description }}</div>
-                </div>
-                <div class="body-row">
-                    <div>Инициатор &#8658; Исполнитель</div>
-                    <div style="display: flex; gap: 20px;">
-                        <div style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
-                            <div>
-                                <div class="profile-foto">
-                                    <img width="64" :src="getFoto(task.initiator.id)" @error="errorFoto($event.target)"/>
-                                </div>
-                            </div>
-                            <div>
-                                <div style="font-weight: bold;">{{ getUserName(task.initiator.id) }}</div>
-                                <div>{{ getUserPost(task.initiator.id) }}</div>
-                                <div>{{ getUserDepartment(task.initiator.id) }}</div>
-                                <div><span v-html="getUseEmail(task.initiator.id)"></span></div>
-                                <div>
-                                    <span v-show="task.initiator.telephone">Тел.: {{ task.initiator.telephone }}</span>
-                                    <span v-show="task.initiator.telephone && task.initiator.mobile">,&nbsp;</span>
-                                    <span v-show="task.initiator.mobile">Сот.: {{ task.initiator.mobile }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
-                            <div>
-                                <div class="profile-foto">
-                                    <img width="64" :src="getFoto(task.executor.id)" @error="errorFoto($event.target)"/>
-                                </div>
-                            </div>
-                            <div>
-                                <div style="font-weight: bold;">{{ getUserName(task.executor.id) }}</div>
-                                <div>{{ getUserPost(task.executor.id) }}</div>
-                                <div>{{ getUserDepartment(task.executor.id) }}</div>
-                                <div><span v-html="getUseEmail(task.executor.id)"></span></div>
-                                <div>
-                                    <span v-show="task.executor.telephone">Тел.: {{ task.executor.telephone }}</span>
-                                    <span v-show="task.executor.telephone && task.executor.mobile">,&nbsp;</span>
-                                    <span v-show="task.executor.mobile">Сот.: {{ task.executor.mobile }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="body-row">
-                    <div>Срок выполнения</div>
-                    <div>{{ convertDate(task.createDate) }} - {{ convertDate(task.executionDate) }}</div>
-                </div>
-                <div class="body-row">
-                    <div>Приоритет</div>
-                    <div>{{ getPriority(task.priority) }}</div>
-                </div>
-                <div class="body-row">
-                    <div>Прогресс</div>
-                    <div>{{ task.progress }}%</div>
-                </div>
-                <div class="line"></div>
-                <div class="body-row">
-                    <div>Ход выполнения задачи,<br>Комментарий к отчёту</div>
-                    <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
-                        <div v-for="(comment, index) in getListComments" :key="comment.id"
-                             style="padding-bottom: 15px;">
-                            <div style="padding: 2px;">
-                                {{ index + 1 }}. [{{ convertDate(comment.date) }}] - {{
-                                    getUserName(comment.userId)
-                                }}
-                                <span style="float: right">Прогресс {{ comment.progress }}% </span>
-                            </div>
-                            <div style="padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px; white-space: pre-line;">{{ comment.comment }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="body-row">
-                    <div>Загруженные файлы</div>
-                    <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
-                        <div v-for="(file, index) in task.files" :key="index" style="padding-bottom: 2px;">
-                            <div
-                                style="display: flex; padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px;">
-                                <img src="@/assets/icons/document-file.png" style="margin-right: 10px; cursor: pointer;"
-                                     @click="downloadFile(file)">
-                                <div style="width: 100%;">
-                                    <img
-                                        v-show="currentUser.id == task.initiator.id || currentUser.id == task.executor.id"
-                                        src="@/assets/icons/file-delete.png"
-                                        style="float: right; cursor: pointer; height: 32px;"
-                                        @click="deleteFile(file)"
-                                    >
-                                    <div @click="downloadFile(file)" style="cursor: pointer;">
-                                        {{ index + 1 }}. [{{ convertDate(file.date, true) }} -
-                                        {{ getUserName(file.ownerId) }}]<br>
-                                        {{ file.name }}, {{ getSize(file.size) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="line"></div>
-            </div>
+	        <div style="display: flex;">
+		        <div class="add-task-content" style="width: 250px;">
+			        <div class="body-row">
+				        <div style="min-height: 460px; text-align: left; margin-left: 20px; border-right: 1px solid #ffffff;">
+					        <div style="margin-bottom: 16px; font-size: 16px;">Управление задачей</div>
+					        <ul class="nav-ul" style="list-style-type: none; cursor: pointer;font-weight: normal;">
+						        <li @click="editTask()" v-show="currentUser.id == task.initiatorId">- Редактировать</li>
+						        <li
+							        @click="uploadFiles()"
+							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Загрузить файлы</li>
+						        <li></li>
+						        <li
+							        @click="сhangeProgress()"
+							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Установить прогресс</li>
+						        <li @click="delegateTask()">- Делегировать задачу</li>
+						        <li @click="downloadReport()">- Загрузить отчет</li>
+						        <li @click="$parent.closeViewTask()">- Закрыть окно</li>
+						        <li style="margin-top: 30px;" @click="removeTask()" v-show="currentUser.id == task.initiatorId">- Удалить задачу</li>
+					        </ul>
+				        </div>
+			        </div>
+		        </div>
+	            <div class="add-task-content" style="left: -100px;">
+	                <div class="body-row">
+	                    <div>Номер задачи / ID</div>
+	                    <div>#{{ task.id }}</div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Статус</div>
+	                    <div>{{ getState(task.state) }}</div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Задача</div>
+	                    <div style="padding: 10px; background-color: #0d304b;">{{ task.name }}</div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Описание</div>
+	                    <div style="padding: 10px; background-color: #0d304b;">{{ task.description }}</div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Инициатор &#8658; Исполнитель</div>
+	                    <div style="display: flex; gap: 20px;">
+	                        <div v-if="taskInitiator" style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
+	                            <div>
+	                                <div class="profile-foto">
+	                                    <img width="64" :src="getFoto(task.initiatorId)" @error="errorFoto($event.target)"/>
+	                                </div>
+	                            </div>
+	                            <div>
+	                                <div style="font-weight: bold;">{{ getUserName(task.initiatorId) }}</div>
+	                                <div>{{ getUserPost(task.initiatorId) }}</div>
+	                                <div>{{ getUserDepartment(task.initiatorId) }}</div>
+	                                <div><span v-html="getUseEmail(task.initiatorId)"></span></div>
+	                                <div>
+		                                <span v-show="taskInitiator.telephone">Тел.: {{ taskInitiator.telephone }}</span>
+	                                    <span v-show="taskInitiator.telephone && taskInitiator.mobile">,&nbsp;</span>
+	                                    <span v-show="taskInitiator.mobile">Сот.: {{ taskInitiator.mobile }}</span>
+	                                </div>
+	                            </div>
+	                        </div>
+	                        <div v-if="taskExecutor" style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
+	                            <div>
+	                                <div class="profile-foto">
+	                                    <img width="64" :src="getFoto(task.executorId)" @error="errorFoto($event.target)"/>
+	                                </div>
+	                            </div>
+	                            <div>
+	                                <div style="font-weight: bold;">{{ getUserName(task.executorId) }}</div>
+	                                <div>{{ getUserPost(task.executorId) }}</div>
+	                                <div>{{ getUserDepartment(task.executorId) }}</div>
+	                                <div><span v-html="getUseEmail(task.executorId)"></span></div>
+	                                <div>
+	                                    <span v-show="taskExecutor.telephone">Тел.: {{ taskExecutor.telephone }}</span>
+	                                    <span v-show="taskExecutor.telephone && taskExecutor.mobile">,&nbsp;</span>
+	                                    <span v-show="taskExecutor.mobile">Сот.: {{ taskExecutor.mobile }}</span>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Срок выполнения</div>
+	                    <div>{{ convertDate(task.startDate) }} - {{ convertDate(task.endDate) }}</div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Приоритет</div>
+	                    <div>{{ getPriority(task.priority) }}</div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Прогресс</div>
+	                    <div>{{ task.progress }}%</div>
+	                </div>
+	                <div class="line"></div>
+	                <div class="body-row">
+	                    <div>Ход выполнения задачи,<br>Комментарий к отчёту</div>
+	                    <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
+	                        <div v-for="(step, index) in getTaskSteps" :key="step.id"
+	                             style="padding-bottom: 15px;">
+	                            <div style="padding: 2px;">
+	                                {{ index + 1 }}. [{{ convertDate(step.userDate) }}] - {{
+	                                    getUserName(step.userId)
+	                                }}
+	                                <span style="float: right">Прогресс {{ step.value }}% </span>
+	                            </div>
+	                            <div style="padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px; white-space: pre-line;">{{ step.comment }}</div>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="body-row">
+	                    <div>Загруженные файлы</div>
+	                    <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
+	                        <div v-for="(file, index) in task.files" :key="index" style="padding-bottom: 2px;">
+	                            <div
+	                                style="display: flex; padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px;">
+	                                <img src="@/assets/icons/document-file.png" style="margin-right: 10px; cursor: pointer;"
+	                                     @click="downloadFile(file)">
+	                                <div style="width: 100%;">
+	                                    <img
+	                                        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId"
+	                                        src="@/assets/icons/file-delete.png"
+	                                        style="float: right; cursor: pointer; height: 32px;"
+	                                        @click="deleteFile(file)"
+	                                    >
+	                                    <div @click="downloadFile(file)" style="cursor: pointer;">
+	                                        {{ index + 1 }}. [{{ convertDate(file.date, true) }} -
+	                                        {{ getUserName(file.userId) }}]<br>
+	                                        {{ file.name }}, {{ getSize(file.size) }}
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="line"></div>
+	            </div>
+	        </div>
             <div class="add-task-footer">
-                <div data-remove @click="removeTask()" v-show="currentUser.id == task.initiator.id">Удалить</div>
-                <div data-remove @click="editTask()" v-show="currentUser.id == task.initiator.id">Редактировать</div>
-                <div data-remove @click="сhangeProgress()"
-                     v-show="currentUser.id == task.initiator.id || currentUser.id == task.executor.id">
-                    Зафиксировать работу
-                </div>
-                <div data-remove @click="downloadReport()">Загрузить отчет</div>
                 <div data-remove @click="$parent.closeViewTask()">Закрыть</div>
             </div>
         </div>
@@ -135,12 +151,14 @@
 <script>
 
 import { mapActions, mapState } from 'vuex';
+import api from '@/api/baseAPI';
 import VMTaskModal from '@/components/vm/task-dp-modal.vue';
 import VMTaskDialog from '@/components/vm/task-dialog.vue';
 import stub_img from '@/assets/images/photo_stub.jpeg';
-import VMAddTaskForm from '@/components/vm/add-task-form';
-import apiTasks from '@/api/VM_Tasks/vm-tasks';
-import VMChangeProgress from '@/components/vm/change-progress';
+import AddTaskForm from '@/components/vm/add-task-form';
+import AddTaskDelegateForm from '@/components/vm/add-task-delegate-form';
+import ChangeProgress from '@/components/vm/change-progress';
+import LoaderFiles from '@/components/vm/loader-files';
 import taskMessage from '@/components/vm/task-message';
 
 export default {
@@ -155,22 +173,35 @@ export default {
         };
     },
     props: {
+	    board: {
+		    type: Object,
+		    required: true
+	    },
         task: {
             type: Object,
             required: true
         }
     },
-    getters: {},
+    getters: {
+
+    },
     computed: {
         ...mapState('vm', ['currentUser', 'users', 'departments']),
-        getListComments() {
-            return this.task.comments.sort((a, b) => a.id > b.id ? 1 : -1);
+	    taskInitiator() {
+		    return this.users[this.task.initiatorId] ? this.users[this.task.initiatorId] : null;
+	    },
+	    taskExecutor() {
+        	return this.users[this.task.executorId] ? this.users[this.task.executorId] : null;
+	    },
+	    getTaskSteps() {
+            return this.task.taskSteps.sort((a, b) => a.id > b.id ? 1 : -1);
         }
     },
     methods: {
         ...mapActions('task', ['setLoaderState']),
+
         getState(state) {
-            return ['Планируется', 'В работе', 'Выполнено', 'Просрочено', 'Отменено'][state];
+            return ['Неизвестный', 'Планируется', 'В работе', 'Выполнено', 'Отменено', 'Просрочено', 'Утверждение', 'Отклоненный'][state];
         },
 
         getUserName(id) {
@@ -193,17 +224,15 @@ export default {
             return this.departments[this.users[id].departmentId].name;
         },
 
-        getPriority(val) {
-            return val == 1 ? 'Критичный' : 'Некритичный';
+        getPriority(state) {
+	        return ['Неизвестный', 'Низкий', 'Обычный', 'Средний', 'Высокий', 'Критический'][state];
         },
 
         // Конвертировать дату
         convertDate(date, full = false) {
             if (!date) return '';
             let part = date.split('T');
-            part[0] = part[0].split('-')
-                .reverse()
-                .join('.');
+            part[0] = part[0].split('-').reverse().join('.');
             part[1] = part[1].split('.')[0];
             if (full) {
                 return part[0] + ' ' + part[1];
@@ -224,14 +253,15 @@ export default {
         },
 
         getSize: function (size) {
-            return size > 1048576 ? `${(size / 1048576).toFixed(2)}Mb.` : `${(size / 1024).toFixed(2)}Kb.`;
+            return size > 1048576 ? `${(size / 1048576).toFixed(2)}Мб.` : `${(size / 1024).toFixed(2)}Кб.`;
         },
 
         editTask() {
             let optionsNew = {
-                editTask: this.task
+            	board: this.board,
+	            _task: this.task
             };
-            this.$modal.show(VMAddTaskForm, optionsNew, {
+            this.$modal.show(AddTaskForm, optionsNew, {
                 height: 'auto',
                 width: '800px',
                 clickToClose: false,
@@ -239,9 +269,9 @@ export default {
                 close() {
                     this.$emit('close');
                 },
-                save() {
+	            async save() {
                     this.$emit('close');
-                    let res = apiTasks.put(this.task.id, this.task);
+	                let response = await api.put('Tasks/' + this.task.id, this.task);
                 }
             });
         },
@@ -251,7 +281,7 @@ export default {
             const options = {
                 task: this.task
             };
-            this.$modal.show(VMChangeProgress,
+            this.$modal.show(ChangeProgress,
                 options,
                 {
                     height: 'auto',
@@ -260,23 +290,20 @@ export default {
                 },
                 {
 
-                    async save(comment, files) {
+                    async save(progress) {
 
                         self.setLoaderState(true);
 
-                        if (comment) {
-                            let response = await apiTasks.appendComment(comment);
-                            self.task.comments.push(response.comment);
-                        }
-
-                        if (files) {
-                            let response = await apiTasks.appendFiles(files);
-                            self.task.files.push(...response.loadedFiles);
+                        if (progress) {
+	                        let response = await api.post('Tasks/setProgress/' + progress.taskId, progress);
+                            self.task.taskSteps.push(response);
                         }
 
                         self.setLoaderState(false);
 
-                        if (comment.progress == 100) {
+                        if (progress.value == 100) {
+
+	                        self.task.state = 3;
 
                             let options = {
                                 title: 'Внимание!',
@@ -294,9 +321,43 @@ export default {
                 });
         },
 
-        downloadFile(file) {
-            let response = apiTasks.downloadFile(file.id, file.name);
-        },
+	    uploadFiles() {
+		    let self = this;
+		    const options = {
+			    task: this.task
+		    };
+		    this.$modal.show(LoaderFiles,
+			    options,
+			    {
+				    height: 'auto',
+				    width: '600px',
+				    clickToClose: false
+			    },
+			    {
+
+				    async save(files) {
+
+					    self.setLoaderState(true);
+
+					    if (files) {
+
+						    let response = await api.form('Tasks/uploadFiles', files);
+						    console.log(response)
+
+						    for (let i in response.loadedFiles) {
+							    self.task.files.push(response.loadedFiles[i]);
+						    }
+
+						    if (response.errorFiles.length) {
+
+						    }
+
+					    }
+
+					    self.setLoaderState(false);
+				    }
+			    });
+	    },
 
         async deleteFile(file) {
 
@@ -317,7 +378,8 @@ export default {
                     async ok() {
 
                         self.setLoaderState(true);
-                        let response = await apiTasks.deleteFile(file.id);
+	                    let response = await api.get('Tasks/deleteFile/' + file.id);
+                        //response = await apiTasks.deleteFile(file.id);
                         self.setLoaderState(false);
 
                         let index = self.task.files.indexOf(file);
@@ -332,7 +394,7 @@ export default {
         },
 
         downloadReport() {
-            window.location.href = '/api/VM_Tasks/getReport/' + this.task.id;
+            window.location.href = '/dtm/Tasks/getReportTask/' + this.task.id;
             //window.open('/api/VM_Tasks/getReport/' + this.task.id, '_blank');
         },
 
@@ -357,12 +419,33 @@ export default {
                 });
         },
 
+	    delegateTask() {
+		    let optionsNew = {
+			    board: this.board,
+			    task: this.task
+		    };
+		    this.$modal.show(AddTaskDelegateForm, optionsNew, {
+			    height: 'auto',
+			    width: '800px',
+			    clickToClose: false,
+		    }, {
+			    close() {
+				    this.$emit('close');
+			    },
+			    async save() {
+				    this.$emit('close');
+				    let response = await api.put('Tasks/delegateTask/' + this.task.id, this.task);
+			    }
+		    });
+	    }
+
     },
 
     created() {
     },
 
     mounted() {
+    	this.task.files = this.task.files || [];
     }
 };
 </script>
@@ -389,10 +472,6 @@ export default {
     width: 880px;
 }
 
-.body-row > div:first-child::after {
-    content: '\003A';
-}
-
 .profile-foto {
     /*margin-top: 15px;*/
     border-radius: 50%;
@@ -400,9 +479,32 @@ export default {
     width: 64px;
     height: 64px;
     overflow: hidden;
-    // background-image: url(../assets/images/photo_stub.jpeg);
+    // background-image: url(../assets/images/photo_stub.jpeg)
+}
 
+.nav-ul li {
+	position: relative;
+	cursor: pointer;
+	line-height: 1;         /*задаём высоту строки*/
+	text-decoration: none;  /*убираем подчёркивание*/
+	margin: 10px;
+}
 
+.nav-ul li:after {
+	display: block;
+	position: absolute;
+	left: 0;                      /*изменить на right:0;, чтобы изменить направление подчёркивания */
+	width: 0;                     /*задаём длинну линии до наведения курсора*/
+	height: 0.5px;                /*задаём ширину линии*/
+	background-color: #ffffff;    /*задаём цвет линии*/
+	content: "";
+	transition: width 0.15s ease-out; /*задаём время анимации*/
+}
+
+.nav-ul li:hover:after,
+
+.nav-ul li:focus:after {
+	width: 90%;
 }
 
 .add-task {

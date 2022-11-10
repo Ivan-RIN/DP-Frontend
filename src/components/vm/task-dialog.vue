@@ -4,7 +4,7 @@
             <span>{{ title }}</span>
             <div class="add-task-header-close" @click="close()"></div>
         </div>
-        <div class="add-task-content" v-html="content"></div>
+        <div class="add-task-content" v-html="content" style="padding-left: 20px"></div>
         <div class="add-task-footer">
             <slot name="footer">
                 <div data-button @click="ok()">Да</div>

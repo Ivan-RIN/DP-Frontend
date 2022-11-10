@@ -4,10 +4,10 @@
     <nav style="min-width: 500px;">
       <div class="menu-container" v-if="isAlive">
         <div class="menu-item">
-          <router-link tag="span" to="/">Задачи</router-link>
+          <a href="/">Задачи</a>
         </div>
         <div class="menu-item">
-          <router-link tag="span" to="/dtm">ВУЭ</router-link>
+          <a href="/dtm">ВУЭ</a>
         </div>
         <div class="menu-item">
           <a href="/docs/РП-ЦП v.1.3.doc">Инструкция</a>

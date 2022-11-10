@@ -1,17 +1,49 @@
 <template>
 	<div>
 		<dp-modal>
-			<template slot="header">Добавить задачу</template>
+			<template slot="header">Делегировать задачу</template>
 			<template slot="body">
 				<div style="padding: 10px; font-weight: bold;"> {{ board.block.name }} / {{ board.name }}</div>
+				<div class="line" style="margin: 10px 0px"></div>
+				<div class="add-task-content-data">
+					<div class="add-task-content-data-field" data-field>
+						<div data-name>Родительская задача:</div>
+						<div data-value>{{ task.name }}</div>
+					</div>
+				</div>
+				<div class="add-task-content-data">
+					<div class="add-task-content-data-field" data-field>
+						<div data-name>Инициатор</div>
+						<div data-value style="width: 600px;">
+							{{ getUserName(task.initiatorId) }}
+						</div>
+					</div>
+				</div>
+				<div class="add-task-content-data">
+					<div class="add-task-content-data-field" data-field>
+						<div data-name>Срок:</div>
+						<div data-value style="width: 600px;">
+							{{ convertDate(task.startDate) }} - {{ convertDate(task.endDate) }}
+						</div>
+					</div>
+				</div>
+				<div class="add-task-content-data">
+					<div class="add-task-content-data-field" data-field>
+						<div data-name>Приоритет:</div>
+						<div data-value style="width: 600px;">
+							{{ getPriority(task.state) }}
+						</div>
+					</div>
+				</div>
+				<div class="line" style="margin: 10px 0px"></div>
 				<div class="add-task-content-data">
 					<div class="add-task-content-data-textarea">
 						<label for="add-task-content-data-textarea-task-name" data-name>
 							Название задачи:
 							<span class="requiredField">*</span>
 						</label>
-						<textarea id="add-task-content-data-textarea-task-name"
-						          class="add-task-content-data-textarea-task" v-model="task.name">
+						<textarea id="add-task-content-data-textarea-task-name" style="width: 600px;"
+						          class="add-task-content-data-textarea-task" v-model="newTask.name">
 						</textarea>
 					</div>
 				</div>
@@ -20,8 +52,8 @@
 						<label for="add-task-content-data-textarea-task" data-name>Описание задачи:<span
 							class="requiredField">*</span></label>
 						<textarea id="add-task-content-data-textarea-task"
-						          style="height: 100px;"
-						          v-model="task.description">
+						          style="height: 100px; width: 600px;"
+						          v-model="newTask.description">
 						</textarea>
 					</div>
 				</div>
@@ -30,7 +62,7 @@
 					<div class="add-task-content-data-field" data-field>
 						<div data-name>Приоритет:<span class="requiredField">*</span></div>
 						<div class="add-task-content-data-field-priority">
-							<select v-model="task.priority" style="margin-left: 5px; width: 180px;">
+							<select v-model="newTask.priority" style="margin-left: 5px; width: 180px;">
 								<option :value="1">Низкий</option>
 								<option :value="2" selected>Обычный</option>
 								<option :value="3">Средний</option>
@@ -43,8 +75,8 @@
 						<div data-value>
 							<date-picker-component
 								:attachQuery="false"
-								v-model="task.endDate"
-								:date="task.endDate.substr(0, 10)"
+								v-model="newTask.endDate"
+								:date="newTask.endDate.substr(0, 10)"
 								:minDate="dateTo"
 							/>
 						</div>
@@ -136,7 +168,7 @@ import LoadingMaskComponent from '../common/loading-mask-component.vue';
 import DpModal from '@/components/vm/dp-modal';
 
 export default {
-	name: 'add-task-form',
+	name: 'add-task-delegate-form',
 	components: {
 		'dp-modal': DpModal,
 		DpCombobox,
@@ -145,10 +177,10 @@ export default {
 		LoadingMaskComponent,
 	},
 	mixins: [globalMethods],
-	props: ['buttonAction', 'board', '_task'],
+	props: ['buttonAction', 'board', 'task', '_task'],
 	data() {
 		return {
-			task: {
+			newTask: {
 				boardId: 0,
 				name: '',
 				description: '',
@@ -158,13 +190,9 @@ export default {
 				executorId: 0,
 				endDate: new Date().toISOString(),
 			},
-			//abbreviation: 'abbreviation',
 			visibleListExecutor: false,
 			userName: '',
-			dateTo: new Date().toISOString()
-				.substr(0, 10),
-			//departmentParent: null,
-			//departmentCurrentId: 0,
+			dateTo: new Date().toISOString().substr(0, 10),
 			currentDepartment: null,
 			currentDepartments: []
 		};
@@ -191,16 +219,33 @@ export default {
 			...mapActions('task', ['setLoaderState']),
 
 			init() {
-				this.task.boardId = this.board.id;
-				this.task.initiatorId = this.currentUser.id;
+				this.newTask.boardId = this.board.id;
+				this.newTask.initiatorId = this.currentUser.id;
 				if (this._task) {
-					this.task = this._task;
-					this.userName = this.getUserName(this.task.executorId);
+					this.newTask = this._task;
+					this.userName = this.getUserName(this.newTask.executorId);
 				}
 			},
 
 			getUserName(id) {
 				return this.users[id] ? this.users[id].name : 'Не известный';
+			},
+
+			// Конвертировать дату
+			convertDate(date, full = false) {
+				if (!date) return '';
+				let part = date.split('T');
+				part[0] = part[0].split('-').reverse().join('.');
+				part[1] = part[1].split('.')[0];
+				if (full) {
+					return part[0] + ' ' + part[1];
+				} else {
+					return part[0];
+				}
+			},
+
+			getPriority(state) {
+				return ['Неизвестный', 'Низкий', 'Обычный', 'Средний', 'Высокий', 'Критический'][state];
 			},
 
 			// Проверить поля задачи
@@ -210,19 +255,19 @@ export default {
 				let message = '';
 				let isError = false;
 
-				if (!this.task.description) {
+				if (!this.newTask.description) {
 					title = 'Ошибка';
 					message = 'Поле "Задача" обязательно к заполнению';
 					isError = true;
 				}
 
-				if (!this.task.executorId) {
+				if (!this.newTask.executorId) {
 					title = 'Ошибка';
 					message = 'Поле "Ответственный" обязательно к заполнению';
 					isError = true;
 				}
 
-				if (!this.task.name) {
+				if (!this.newTask.name) {
 					title = 'Ошибка';
 					message = 'Поле "Название" обязательно к заполнению';
 					isError = true;
@@ -244,20 +289,20 @@ export default {
 			inputValue(value) {
 				this.visibleListExecutor = true;
 				this.userName = value;
-				this.task.executorId = 0;
+				this.newTask.executorId = 0;
 			},
 
 			resetUserName() {
 				this.userName = '';
-				this.task.executorId = 0;
+				this.newTask.executorId = 0;
 				this.visibleListExecutor = false;
 			},
 
 			// Выберите имя исполнителя
 			setExecutorId(id) {
 				this.userName = this.users[id].name;
-				this.task.executorId = id;
-				this.task.departmentId = this.users[id].departmentId;
+				this.newTask.executorId = id;
+				this.newTask.departmentId = this.users[id].departmentId;
 				this.visibleListExecutor = false;
 			},
 
@@ -309,9 +354,10 @@ export default {
 				self.setLoaderState(true);
 
 				if (self._task) {
-					task = await api.put('Tasks/editTask/' + self.task.id, self.task);
+					//task = await apiTasks.put(self.task.id, self.task);
 				} else {
-					task = await api.post('Tasks/createTask', self.task);
+					task  = await api.post('Tasks/delegateTask/' + self.task.id, self.newTask);
+					//task = await apiTasks.post(self.task);
 				}
 
 				self.setLoaderState(false);

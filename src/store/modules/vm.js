@@ -15,12 +15,16 @@ const downloadList = [
 		commit: 'setUsers'
 	},
 	{
-		address: 'Loader/getBoards',
-		commit: 'setBoards'
+		address: 'Loader/GetBoardBlocks',
+		commit: 'setBoardBlocks'
 	},
+	// {
+	// 	address: 'Loader/getBoardSections',
+	// 	commit: 'setBoardSections'
+	// },
 	{
-		address: 'Loader/getBoardRoles',
-		commit: 'setBoardRoles'
+		address: 'Loader/getBoardUsers',
+		commit: 'setBoardUsers'
 	},
 ];
 
@@ -31,8 +35,9 @@ const state = {
 	organizations: {},
 	departments: {},
 	boards: {},
-	boardRoles: {},
-	structureDepartments: [],
+	boardBlocks: {},
+	boardUsers: {},
+	rootDepartments: [],
 	listDepartments: []
 };
 
@@ -97,7 +102,7 @@ const mutations = {
 				parent.childs.push(item);
 				parent.relatives.push(item.id);
 			} else {
-				state.structureDepartments.push(item);
+				state.rootDepartments.push(item);
 			}
 		}
 
@@ -109,14 +114,19 @@ const mutations = {
 			state.users[item.id] = item;
 		}
 	},
-	setBoards(state, payload) {
+	// setBoards(state, payload) {
+	// 	for(let item of payload) {
+	// 		state.boards[item.id] = item;
+	// 	}
+	// },
+	setBoardBlocks(state, payload) {
 		for(let item of payload) {
-			state.boards[item.id] = item;
+			state.boardBlocks[item.id] = item;
 		}
 	},
-	setBoardRoles(state, payload) {
+	setBoardUsers(state, payload) {
 		for(let item of payload) {
-			state.boardRoles[item.boardId] = item.roleId;
+			state.boardUsers[item.boardId] = item.roleId;
 		}
 	},
 	downloadCompleted(state) {

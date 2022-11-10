@@ -1,60 +1,31 @@
 <template>
     <div class="task-list">
         <div style="display: flex;">
-	        <select v-if="listDepartments.length">
-		        <option :value="null" disabled selected style="font-weight: bold;">
-			        {{ listDepartments[0].abbreviation }}
-		        </option>
-	        </select>
-	        <template v-for="department in listDepartments" v-if="department.childs.length">
-		        <select style="margin-left: 5px;" @change="setListDepartments($event.target.value);">
-	                <option :value="department.id" style="font-weight: bold;">Все</option>
-	                <option
-	                    v-for="(dep) in department.childs"
-	                    :key="dep.id"
-	                    :value="dep.id"
-	                >
-	                    {{ dep.abbreviation }}
-	                </option>
-	            </select>
-	        </template>
-	        <select style="margin-left: 5px;" v-model="selectBoardId" @change="">
-                <option :value="0" style="font-weight: bold;">Все задачи</option>
+            <select v-model="blockId" @change="boardId = 0;">
                 <option
-                    v-for="board in boards"
-                    v-if="isDepartmentBoard(board.departments)"
-                    :key="board.id"
-                    :value="board.id"
-                >
-                    {{ board.name }}
+                    v-for="(block) in blocks"
+                    :key="block.id"
+                    :value="block.id">
+                    {{ block.name }}
                 </option>
             </select>
-<!--            <select v-model="departmentParent" @change="departmentCurrentId = 0;">-->
-<!--                <option :value="null" style="font-weight: bold;">Все задачи</option>-->
-<!--                <option-->
-<!--                    v-for="(department) in structureDepartments"-->
-<!--                    :key="department.id"-->
-<!--                    :value="department"-->
-<!--                >-->
-<!--                    {{ department.abbreviation }}-->
-<!--                </option>-->
-<!--            </select>-->
-<!--          <select v-model="departmentCurrentId" style="margin-left: 5px;" v-if="departmentParent">-->
-<!--            <option :value="0" style="font-weight: bold;">Все задачи</option>-->
-<!--            <option-->
-<!--                v-for="(department) in departmentParent.childs"-->
-<!--                :key="department.id"-->
-<!--                :value="department.id">-->
-<!--              {{ department.abbreviation }}-->
-<!--            </option>-->
-<!--          </select>-->
+          <select v-model="boardId" style="margin-left: 5px;">
+            <option :value="0" style="font-weight: bold;">Все задачи</option>
+            <option
+                v-for="(board) in boards"
+                v-if="blockId == board.blockId"
+                :key="board.id"
+                :value="board.id">
+              {{ board.name }}
+            </option>
+          </select>
         </div>
         <div class="line"></div>
-        <div class="vm-task-list-header">
+        <div class="vm-task-list-header" style="background-color: #10548a; margin-bottom: 15px; border-radius: 5px;">
             <div class="row-col-1" style="cursor: pointer;"
                  @click="sortTasks('executionDate')"
             >
-                Дата<br>исполнения
+                Дата исполнения
             </div>
             <div class="row-col-2" style="cursor: pointer;"
                  @click="sortTasks('execution')"
@@ -81,12 +52,11 @@
             >
                 Дата создания
             </div>
-			<div style="width: 32px;"></div>
         </div>
         <div style="position: relative;"
              v-for="board in boards"
              :key="board.id"
-             v-if="!selectBoardId || selectBoardId == board.id"
+             v-if="blockId == board.blockId && (!boardId || boardId == board.id)"
         >
 	        <div style="height: 33px;"></div>
             <div style="padding: 8px 8px 8px 8px; font-weight: bold; background-color: #0d304b; min-width: 170px; text-align: center;
@@ -95,15 +65,22 @@
             </div>
 	        <add-task-button
 		        :user = "currentUser"
-		        :boardId="board.id"
+		        :board="board"
 		        :action="openAddTaskForm"
+	        ></add-task-button>
+	        <add-task-button
+		        :title = "'Загрузить Отчет'"
+		        :offset = 150
+		        :user = "currentUser"
+		        :board="board"
+		        :action="downloadBoardReport"
 	        ></add-task-button>
             <div class="vm-task-list-content-background" style="margin-bottom: 20px;">
 	            <template v-if="board.tasks.length > 0">
                     <div class="vm-task-list-content"
                      v-for="task in board.tasks"
                      :key="task.id"
-                     @click="openViewTask(task)">
+                     @click="openViewTask(board, task)">
                     <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.executionDate) }">
                         {{ convertDate(task.endDate) }}
                     </div>
@@ -112,8 +89,8 @@
                     </div>
                     <div class="row-col-3" style="text-align: left; display: flex; align-items: center;">
                         <div style="width: 32px;">
-                            <img v-if="task.state == 2" src="@/assets/icons/performed.png" width="24">
-                            <img v-else v-show="task.priority == 1" src="@/assets/icons/fire.png" width="24">
+                            <img v-if="task.state == 3" src="@/assets/icons/performed.png" width="24">
+                            <img v-else v-show="task.priority > 3" src="@/assets/icons/fire.png" width="24">
                         </div>
                         <div>#{{ task.id }}. {{ task.name }}</div>
                     </div>
@@ -132,7 +109,7 @@
                 </div>
 	            </template>
 	            <template v-else>
-					<div style="padding: 10px 20px; font-weight: bold;">Список задач пуст</div>
+					<div class="vm-task-list-content" style="padding: 10px 20px; font-weight: bold;">Список задач пуст</div>
 	            </template>
             </div>
         </div>
@@ -145,7 +122,7 @@ import { mapState } from 'vuex';
 import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import VMViewTask from '@/components/vm/task-view.vue';
 import VMTaskActionComponent from '@/components/vm/task-action-component.vue';
-import VMAddTaskForm from '@/components/vm/add-task-form';
+import AddTaskForm from '@/components/vm/add-task-form';
 import AddTaskButton from '@/components/vm/add-task-button';
 
 export default {
@@ -163,14 +140,16 @@ export default {
 	        listDepartments: [],
             departmentParent: null,
             departmentCurrentId: 0,
-	        selectBoardId: 0
+	        blocks: [],
+	        boardId: 0,
+	        blockId: 0
         };
     },
     components: {
         'vm-task-action-component': VMTaskActionComponent,
         DpComboboxComponent,
         VMViewTask,
-	    VMAddTaskForm,
+	    AddTaskForm,
 	    AddTaskButton
     },
     props: {
@@ -189,10 +168,41 @@ export default {
     },
     mixins: [],
     computed: {
-        ...mapState('vm', ['currentUser', 'users', 'departments', 'structureDepartments']),
+        ...mapState('vm', ['currentUser', 'users', 'departments', 'boardBlocks']),
     },
     watch: {},
     methods: {
+
+    	init() {
+
+		    for (let boardId in this.boards) {
+
+			    let board = this.boards[boardId];
+			    let block = this.boardBlocks[board.blockId];
+
+			    if (block) {
+				    let add = true;
+				    for (let item of this.blocks) if (item.id == block.id) add = false;
+				    if (add) this.blocks.push(this.boardBlocks[board.blockId]);
+			    }
+
+			    if (!this.boardId && board.default) {
+				    this.boardId = board.id;
+				    this.blockId = board.blockId;
+			    }
+
+			    if (board.ownerId && board.ownerId == this.currentUser.id) {
+				    this.boardId = board.id;
+				    this.blockId = board.blockId;
+			    }
+		    }
+
+		    if (!this.blockId && this.blocks.length){
+			    this.blockId = this.blocks[0].id;
+		    }
+
+	    },
+
         // Форма добавления задачи
         openAddTaskForm(options) {
 
@@ -205,7 +215,7 @@ export default {
             optionsNew.buttonAction = this.buttonAction;
             optionsNew.tasks = this.tasks;
 
-            this.$modal.show(VMAddTaskForm, optionsNew, {
+            this.$modal.show(AddTaskForm, optionsNew, {
                 height: 'auto',
                 width: '800px',
                 clickToClose: false,
@@ -262,50 +272,13 @@ export default {
                 }
             }
         },
-	    departmentParentField() {
-        	this.departmentCurrentId = 0;
-	    },
-	    getListTasks(depId) {
-        	//!departmentParent || (departmentCurrentId && departmentCurrentId == depId)
-		    //let dep = this.departments[this.departmentCurrentId];
-		    //console.log(this.departmentCurrentId.relatives, depId);
-		    //return this.departmentCurrentId.relatives.indexOf(depId) != -1;
-		    return true;
-	    },
-	    isDepartmentBoard(departments) {
-        	console.log('this.departmentCurrentId', this.departmentCurrentId)
-        	for(let dep of departments) {
-		        if (dep.departmentId == this.departmentCurrentId) return true;
-	        }
-        	return false;
-	    },
-	    setListDepartments(id) {
-		    this.listDepartments.length = 0;
-        	if (this.departments[id]) {
-		        let dep = this.departments[id];
-		        this.departmentCurrentId = dep.id;
-		        while (dep) {
-			        this.listDepartments.unshift(dep);
-			        if (dep.parentId)
-			            dep = this.departments[dep.parentId];
-			        else dep = null;
-		        }
-	        }
+	    downloadBoardReport(options) {
+		    window.location.href = '/dtm/Tasks/getReportBoard/' + options.board.id;
 	    }
     },
     mounted() {
-        history.pushState(null, null, '/dtm');
-        if (this.currentUser.departmentId) {
-          let dep = this.departments[this.currentUser.departmentId];
-          if (dep.parentId) {
-            this.departmentParent = this.departments[dep.parentId];
-            this.departmentCurrentId = dep.id;
-          } else {
-	          this.departmentParent = dep;
-          }
-        }
-	    this.departmentCurrentId = 4;
-	    this.listDepartments.push(this.departments[4]);
+		this.init();
+    	console.log('Task List mounted');
     }
 };
 
@@ -364,7 +337,7 @@ input.Executor {
         background-color: #0d304b;
     }
     &-content:hover {
-        background-color: #154164;
+        background-color: #0c395a;
     }
 
     &-content {
@@ -374,6 +347,7 @@ input.Executor {
         min-height: 40px;
         padding: 10px 10px 10px 10px;
         border-bottom: solid 1px $line-color;
+	    border-right: solid 1px $line-color;
         margin: 0px 0;
         cursor: pointer;
     }

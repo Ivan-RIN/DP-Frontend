@@ -11,22 +11,17 @@
                 @click="activeComponent = 'task-list'">
                 Задачи
             </button>
-            <button
-                :style="{backgroundColor: activeComponent == 'task-my-list' ? '#0c79cd' : ''}"
-                @click="activeComponent = 'task-my-list'">
-                 Мои Задачи
-            </button>
+<!--            <button-->
+<!--                :style="{backgroundColor: activeComponent == 'task-my-list' ? '#0c79cd' : ''}"-->
+<!--                @click="activeComponent = 'task-my-list'">-->
+<!--                 Мои Задачи-->
+<!--            </button>-->
             <button
                 :style="{backgroundColor: activeComponent == 'list-users' ? '#0c79cd' : ''}"
                 @click="activeComponent = 'list-users'">
                 Резиденты
             </button>
 			<div style="width: 100%;"></div>
-			<button
-				style="width: 200px;"
-				@click="downloadReport()">
-				Загрузить отчет
-			</button>
         </div>
 
         <div v-show="!loaderState">
@@ -34,6 +29,7 @@
             <component :is="activeComponent" v-if="isActive"
                        :tasks="tasks"
                        :boards="boards"
+                       :board="board"
                        :task="task"
                        :users="users"
                        :openViewTask="openViewTask"
@@ -56,10 +52,8 @@
 import { mapActions, mapState } from 'vuex';
 import LoadingMaskComponent from '../common/loading-mask-component.vue';
 import api from '@/api/baseAPI';
-//import VMTaskFilterComponent from '@/components/vm/task-filter-component.vue';
 import TaskList from '@/components/vm/task-list.vue';
 import TaskMyList from '@/components/vm/task-my-list.vue';
-//import VMAddTaskForm from '@/components/vm/add-task-form.vue';
 import TaskView from '@/components/vm/task-view.vue';
 import ListUsers from '@/components/vm/list-users.vue';
 
@@ -75,6 +69,7 @@ export default {
     props: {},
     data() {
         return {
+	        board: null,
 	        boards: [],
             tasks: {},
             task: {},
@@ -85,22 +80,19 @@ export default {
     },
     watch: {},
     computed: {
-        ...mapState('task', ['filterState', 'loaderState']),
-        ...mapState('vm', ['currentUser', 'users'])
+        ...mapState('task', ['loaderState']),
+        ...mapState('vm', ['currentUser', 'users', 'boardBlocks'])
     },
     methods: {
         ...mapActions('vm', ['loadAllVM', 'setRoles']),
         ...mapActions('task', ['setLoaderState']),
-        async getTasksHistory() {
-            const history = await apiTasks.getHistory({
-                dateFrom: this.filterState.dateFrom,
-                dateTo: this.filterState.dateTo,
-            });
-        },
 
-        modalButtonAction(buttonName) {
-            if (buttonName === 'save') {
-                this.loadData(this.filterState);
+	    async modalButtonAction(buttonName, task) {
+            if (buttonName === 'createTask') {
+	            await this.loadData();
+                if (task) {
+	                this.openViewTaskBy(task.id);
+                }
             }
         },
 
@@ -118,15 +110,17 @@ export default {
         },
 
         // Загрузка задач
-        async loadData(filter) {
+        async loadData() {
 
             this.setLoaderState(true);
 
             if (this.currentUser.access && this.currentUser.access.isActive) {
-
                 this.boards = await api.get('Loader/getBoards');
-                //this.tasks = this.sortTasks(tasks);
-
+	            for (let boardId in this.boards) {
+		            let board = this.boards[boardId];
+		            let block = this.boardBlocks[board.blockId];
+		            if (block) board.block = block;
+	            }
                 this.checkSelectedTask();
                 this.isActive = true;
             }
@@ -135,7 +129,8 @@ export default {
 
         },
 
-        openViewTask(task) {
+        openViewTask(board, task) {
+	        this.board = board;
             this.task = task;
             this.activeComponent = 'task-view';
         },
@@ -146,35 +141,36 @@ export default {
 
         checkSelectedTask() {
             if (this.$route.params.taskId) {
-                for (let board of this.boards) {
-	                for (let task of board.tasks) {
-		                if (task.id == this.$route.params.taskId) {
-			                this.openViewTask(task);
-			                break;
-		                }
-                    }
-                }
+	            this.openViewTaskBy(this.$route.params.taskId);
             }
         },
 
+	    openViewTaskBy(id) {
+		    for (let board of this.boards) {
+			    for (let task of board.tasks) {
+				    if (task.id == id) {
+					    this.openViewTask(board, task);
+					    break;
+				    }
+			    }
+		    }
+	    },
+
         async removeTask(task) {
             this.closeViewTask();
-            apiTasks.delete(task.id);
-            this.loadData(this.filterState);
+	        this.setLoaderState(true);
+	        let res = await api.delete('Tasks/' + task.id);
+            this.loadData();
+	        this.setLoaderState(false);
         },
-
-		downloadReport() {
-			window.location.href = '/dtm/Tasks/getReportTasks';
-		},
 
     },
     mounted() {
-        //this.loadData(this.filterState);
     },
     created() {
     	const self = this;
         this.loadAllVM(function () {
-	        self.loadData(self.filterState);
+	        self.loadData();
         });
     },
 

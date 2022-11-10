@@ -10,7 +10,7 @@
           </router-link>
         </div>
         <div class="menu-item">
-          <router-link tag="span" to="/dtm">ВУЭ</router-link>
+          <a href="/dtm">ВУЭ</a>
         </div>
         <div class="menu-item" v-if="$can('read', 'Analytics')">
           <router-link tag="span" to="/report">Аналитика</router-link>
