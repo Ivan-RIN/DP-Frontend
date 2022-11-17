@@ -11,7 +11,7 @@
 							<span class="requiredField">*</span>
 						</label>
 						<textarea id="add-task-content-data-textarea-task-name"
-						          class="add-task-content-data-textarea-task" v-model="task.name">
+								  class="add-task-content-data-textarea-task" v-model="task.name">
 						</textarea>
 					</div>
 				</div>
@@ -20,8 +20,8 @@
 						<label for="add-task-content-data-textarea-task" data-name>Описание задачи:<span
 							class="requiredField">*</span></label>
 						<textarea id="add-task-content-data-textarea-task"
-						          style="height: 100px;"
-						          v-model="task.description">
+								  style="height: 100px;"
+								  v-model="task.description">
 						</textarea>
 					</div>
 				</div>
@@ -88,18 +88,18 @@
 						<div data-name>Ответственный:<span class="requiredField">*</span></div>
 						<div data-value>
 							<input style="width: 250px;"
-							       type="text" v-model="userName"
-							       @input="inputValue($event.target.value)"
-							       @focus="visibleListExecutor=true"
-							       @click="visibleListExecutor=true"
+								   type="text" v-model="userName"
+								   @input="inputValue($event.target.value)"
+								   @focus="visibleListExecutor=true"
+								   @click="visibleListExecutor=true"
 							>
 							<div v-show="visibleListExecutor"
-							     @mouseleave="visibleListExecutor=false"
-							     style="position: absolute; top: 34px; overflow: hidden;
+								 @mouseleave="visibleListExecutor=false"
+								 style="position: absolute; top: 34px; overflow: hidden;
                                 background-color: rgba(0,0,0,0.9); border: 1px solid #010177"
 							>
 								<div if v-if="filteredList.length > 0"
-								     style="overflow-x: hidden; overflow-y: auto; width: 250px; max-height: 120px;">
+									 style="overflow-x: hidden; overflow-y: auto; width: 250px; max-height: 120px;">
 									<div
 										class="add-task-content-data-list-users"
 										style="padding: 4px; font-size: 12px; white-space: nowrap;"
@@ -312,9 +312,17 @@ export default {
 					task = await api.put('Tasks/editTask/' + self.task.id, self.task);
 				} else {
 					task = await api.post('Tasks/createTask', self.task);
+					if (task.errorMessage) {
+						var mail = await api.post('Tasks/SendTaskMail', [
+							{
+								taskId: task.id,
+								//userId: task.executorId,
+								userId: 4, // rekhtin.in
+								mailId: 1
+							}
+						]);
+					}
 				}
-
-				self.setLoaderState(false);
 
 				if (task.errorMessage) {
 					self.$root.showModalError(task);
@@ -324,6 +332,8 @@ export default {
 					}
 					self.$emit('close');
 				}
+
+				self.setLoaderState(false);
 
 			},
 

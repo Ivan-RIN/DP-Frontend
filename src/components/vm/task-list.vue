@@ -221,6 +221,7 @@ export default {
                 clickToClose: false,
             });
         },
+
         overdueDateColor(state, executionDate) {
             let date = new Date(executionDate);
             let current = new Date();
@@ -278,7 +279,6 @@ export default {
     },
     mounted() {
 		this.init();
-    	console.log('Task List mounted');
     }
 };
 

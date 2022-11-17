@@ -349,24 +349,23 @@ export default {
 				}
 
 				const self = this;
-				let task;
+				let resTask;
 
 				self.setLoaderState(true);
 
 				if (self._task) {
 					//task = await apiTasks.put(self.task.id, self.task);
 				} else {
-					task  = await api.post('Tasks/delegateTask/' + self.task.id, self.newTask);
-					//task = await apiTasks.post(self.task);
+          resTask  = await api.post('Tasks/delegateTask/' + self.task.id, self.newTask);
 				}
 
 				self.setLoaderState(false);
 
-				if (task.errorMessage) {
-					self.$root.showModalError(task);
+				if (resTask.errorMessage) {
+					self.$root.showModalError(resTask);
 				} else {
 					if (this.buttonAction) {
-						this.buttonAction('createTask', task);
+						this.buttonAction('createTask', resTask);
 					}
 					self.$emit('close');
 				}

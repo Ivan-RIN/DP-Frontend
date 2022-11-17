@@ -16,6 +16,16 @@
 <!--                @click="activeComponent = 'task-my-list'">-->
 <!--                 Мои Задачи-->
 <!--            </button>-->
+			<button
+				:style="{backgroundColor: activeComponent == 'list-boards' ? '#0c79cd' : ''}"
+				@click="activeComponent = 'list-boards'">
+				Борды
+			</button>
+			<button
+				:style="{backgroundColor: activeComponent == 'subtask-scheme' ? '#0c79cd' : ''}"
+				@click="activeComponent = 'subtask-scheme'">
+				Схема
+			</button>
             <button
                 :style="{backgroundColor: activeComponent == 'list-users' ? '#0c79cd' : ''}"
                 @click="activeComponent = 'list-users'">
@@ -33,6 +43,7 @@
                        :task="task"
                        :users="users"
                        :openViewTask="openViewTask"
+					   :openViewBoard="openViewBoard"
                        :buttonAction = modalButtonAction
             />
             <div v-else>
@@ -56,6 +67,9 @@ import TaskList from '@/components/vm/task-list.vue';
 import TaskMyList from '@/components/vm/task-my-list.vue';
 import TaskView from '@/components/vm/task-view.vue';
 import ListUsers from '@/components/vm/list-users.vue';
+import ListBoards from '@/components/vm/list-boards.vue';
+import BoardView from '@/components/vm/board-view.vue';
+import SubtaskScheme from '@/components/vm/subtask-scheme.vue';
 
 export default {
     name: 'vm-tasks-view',
@@ -64,7 +78,10 @@ export default {
         TaskMyList,
         LoadingMaskComponent,
         TaskView,
-        ListUsers
+        ListUsers,
+		ListBoards,
+		BoardView,
+		SubtaskScheme
     },
     props: {},
     data() {
@@ -92,6 +109,8 @@ export default {
 	            await this.loadData();
                 if (task) {
 	                this.openViewTaskBy(task.id);
+                } else {
+                  this.activeComponent = 'task-list';
                 }
             }
         },
@@ -120,6 +139,10 @@ export default {
 		            let board = this.boards[boardId];
 		            let block = this.boardBlocks[board.blockId];
 		            if (block) board.block = block;
+		            for (let i in board.tasks) {
+						let task = board.tasks[i];
+						this.tasks[task.id] = task;
+					}
 	            }
                 this.checkSelectedTask();
                 this.isActive = true;
@@ -134,6 +157,11 @@ export default {
             this.task = task;
             this.activeComponent = 'task-view';
         },
+
+		openViewBoard(board) {
+			this.board = board;
+			this.activeComponent = 'board-view';
+		},
 
         closeViewTask() {
             this.activeComponent = 'task-list';

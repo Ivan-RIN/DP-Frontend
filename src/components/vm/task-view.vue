@@ -19,7 +19,7 @@
 						        <li
 							        @click="сhangeProgress()"
 							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Установить прогресс</li>
-						        <li @click="delegateTask()">- Делегировать задачу</li>
+						        <li @click="delegateTask()" >- Делегировать задачу</li>
 						        <li @click="downloadReport()">- Загрузить отчет</li>
 						        <li @click="$parent.closeViewTask()">- Закрыть окно</li>
 						        <li style="margin-top: 30px;" @click="removeTask()" v-show="currentUser.id == task.initiatorId">- Удалить задачу</li>
@@ -32,10 +32,40 @@
 	                    <div>Номер задачи / ID</div>
 	                    <div>#{{ task.id }}</div>
 	                </div>
-	                <div class="body-row">
-	                    <div>Статус</div>
-	                    <div>{{ getState(task.state) }}</div>
-	                </div>
+					<div class="body-row" v-if="task.parentTask">
+						<div>Родительская задача</div>
+						<div style="padding: 10px; background-color: #0d304b;">
+							<div class="body-row-child">
+								<div>Задача:</div>
+								<div>#{{ task.parentTask.id }}, {{ task.parentTask.name }}</div>
+							</div>
+							<div class="body-row-child">
+								<div>Описание:</div>
+								<div>{{ task.parentTask.description }}</div>
+							</div>
+							<div class="body-row-child">
+								<div>Инициатор:</div>
+								<div>{{ getUserName(task.parentTask.initiatorId) }}</div>
+							</div>
+							<div class="body-row-child">
+								<div>Срок выполнения</div>
+								<div>{{ convertDate(task.parentTask.startDate) }} - {{ convertDate(task.parentTask.endDate) }}</div>
+							</div>
+							<div class="body-row-child">
+								<div>Приоритет</div>
+								<div>{{ getPriority(task.parentTask.priority) }}</div>
+							</div>
+							<div class="body-row-child">
+								<div>Прогресс</div>
+								<div>{{ task.parentTask.progress }}%</div>
+							</div>
+							<div class="body-row-child" style="position: relative;">
+								<div></div>
+								<div data-button style="position: absolute; right: 0px; top: -30px"
+									 @click="$parent.openViewTaskBy(task.parentTask.id)">Открыть задачу</div>
+							</div>
+						</div>
+					</div>
 	                <div class="body-row">
 	                    <div>Задача</div>
 	                    <div style="padding: 10px; background-color: #0d304b;">{{ task.name }}</div>
@@ -85,6 +115,10 @@
 	                        </div>
 	                    </div>
 	                </div>
+					<div class="body-row">
+						<div>Статус</div>
+						<div>{{ getState(task.state) }}</div>
+					</div>
 	                <div class="body-row">
 	                    <div>Срок выполнения</div>
 	                    <div>{{ convertDate(task.startDate) }} - {{ convertDate(task.endDate) }}</div>
@@ -180,7 +214,10 @@ export default {
         task: {
             type: Object,
             required: true
-        }
+        },
+      buttonAction: {
+        type: Function
+      }
     },
     getters: {
 
@@ -199,6 +236,10 @@ export default {
     },
     methods: {
         ...mapActions('task', ['setLoaderState']),
+
+		init() {
+
+		},
 
         getState(state) {
             return ['Неизвестный', 'Планируется', 'В работе', 'Выполнено', 'Отменено', 'Просрочено', 'Утверждение', 'Отклоненный'][state];
@@ -368,7 +409,8 @@ export default {
                 content: `<p>Вы действительно хотите удалить файл: "${file.name}"?</p>`
             };
 
-            this.$modal.show(VMTaskDialog, options,
+            this.$modal.show(VMTaskDialog,
+				options,
                 {
                     height: 'auto',
                     width: '600px',
@@ -405,7 +447,8 @@ export default {
                 title: 'Вы действительно хотите удалить задачу?',
                 content: '<h3>' + this.task.name + '</h3><p><span style="font-weight: bold;">Описание:</span> ' + this.task.description + '</p>'
             };
-            this.$modal.show(VMTaskDialog, options,
+            this.$modal.show(VMTaskDialog,
+				options,
                 {
                     height: 'auto',
                     width: '600px',
@@ -420,10 +463,13 @@ export default {
         },
 
 	    delegateTask() {
+
 		    let optionsNew = {
 			    board: this.board,
-			    task: this.task
+			    task: this.task,
+          buttonAction: this.buttonAction
 		    };
+
 		    this.$modal.show(AddTaskDelegateForm, optionsNew, {
 			    height: 'auto',
 			    width: '800px',
@@ -442,6 +488,7 @@ export default {
     },
 
     created() {
+    	this.init();
     },
 
     mounted() {
@@ -470,6 +517,24 @@ export default {
 
 .body-row > div:nth-child(2) {
     width: 880px;
+}
+
+.body-row-child {
+	display: flex;
+}
+
+.body-row-child > div {
+	margin: 4px 10px;
+}
+
+.body-row-child > div:nth-child(1) {
+	width: 160px;
+	text-align: right;
+	font-weight: bold;
+}
+
+.body-row-child > div:nth-child(2) {
+
 }
 
 .profile-foto {
@@ -505,6 +570,10 @@ export default {
 
 .nav-ul li:focus:after {
 	width: 90%;
+}
+
+div[data-button] {
+	@extend %button;
 }
 
 .add-task {

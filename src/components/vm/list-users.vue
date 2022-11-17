@@ -33,9 +33,8 @@ import { mapState } from 'vuex';
 
 export default {
     name: "list-users",
-    props: ['users', 'tasks'],
     computed: {
-        ...mapState('vm', ['departments']),
+        ...mapState('vm', ['boards', 'departments', 'users']),
     },
     methods: {
         getUserDepartment(depId) {
@@ -44,12 +43,15 @@ export default {
         },
         countTasks(userId) {
             let count = 0;
-            for(let i in this.tasks) {
-                let dep = this.tasks[i];
-                for(let task of dep) {
-                    if (task.executor.id == userId) count++;
-                }
-            }
+			for(let i in this.boards) {
+				let tasks = this.boards[i];
+				for (let j in tasks) {
+					let dep = this.tasks[j];
+					for (let task of dep) {
+						if (task.executorId == userId) count++;
+					}
+				}
+			}
             return count;
         },
         countControl(userId) {
@@ -57,7 +59,7 @@ export default {
             for(let i in this.tasks) {
                 let dep = this.tasks[i];
                 for(let task of dep) {
-                    if (task.initiator.id == userId) count++;
+                    if (task.initiatorId == userId) count++;
                 }
             }
             return count;

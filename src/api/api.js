@@ -51,7 +51,7 @@ export default {
 
         // need for debug-mode without auth
         if (process.env.VUE_APP_CREDENTAILS === true) {
-            options.credentials = 'include';
+            options.credentials = 'include'; // credentials: 'same-origin', 'include'
         }
 
         return options;
