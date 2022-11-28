@@ -19,8 +19,8 @@
                     <td>{{ user.name }}</td>
                     <td>{{ user.post }}</td>
                     <td>{{ user.email }}</td>
-                    <td>{{ countControl(user.id) }}</td>
-                    <td>{{ countTasks(user.id) }}</td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </tbody>
         </table>
@@ -44,9 +44,9 @@ export default {
         countTasks(userId) {
             let count = 0;
 			for(let i in this.boards) {
-				let tasks = this.boards[i];
+				let tasks = this.boards[i].tasks;
 				for (let j in tasks) {
-					let dep = this.tasks[j];
+					let dep = tasks[j];
 					for (let task of dep) {
 						if (task.executorId == userId) count++;
 					}

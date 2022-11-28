@@ -1,24 +1,56 @@
 <template>
     <div class="task-list">
         <div style="display: flex;">
-            <select v-model="blockId" @change="boardId = 0;">
+            <select v-model="blockId" @change="setBlockId(blockId); setBoardId(0); boardId = 0">
                 <option
                     v-for="(block) in blocks"
                     :key="block.id"
-                    :value="block.id">
+                    :value="block.id"
+                    :selected="block.id == blockId"
+                >
                     {{ block.name }}
                 </option>
             </select>
-          <select v-model="boardId" style="margin-left: 5px;">
-            <option :value="0" style="font-weight: bold;">Все задачи</option>
-            <option
-                v-for="(board) in boards"
-                v-if="blockId == board.blockId"
-                :key="board.id"
-                :value="board.id">
-              {{ board.name }}
-            </option>
-          </select>
+            <select v-model="boardId" style="margin-left: 5px;" @change="setBoardId(boardId)">
+                <option :value="0" style="font-weight: bold;">Все задачи</option>
+                <option
+                    v-for="(board) in boards"
+                    v-if="blockId == board.blockId"
+                    :key="board.id"
+                    :value="board.id"
+                    :selected="board.id == boardId"
+                >
+                    {{ board.name }}
+                </option>
+
+            </select>
+        </div>
+        <div style="position: relative">
+            <div class="type-states">
+                <div style="padding: 2px 24px; font-weight: bold;">
+                    Состояния:
+                </div>
+                <div style="display: flex;">
+                    <div class="task-status" style="background-color: #FFFFFF; margin: 3px;"></div>
+                    <div style="padding: 1px 8px;">Планируется</div>
+                </div>
+                <div style="display: flex;">
+                    <div class="task-status" style="background-color: #E0E709; margin: 3px;"></div>
+                    <div style="padding: 1px 8px;">В работе</div>
+                </div>
+                <div style="display: flex;">
+                    <div class="task-status" style="background-color: #257A0D; margin: 3px;"></div>
+                    <div style="padding: 1px 8px;">Выполнено</div>
+                </div>
+                <div style="display: flex;">
+                    <div class="task-status" style="background-color: #D41717; margin: 3px;"></div>
+                    <div style="padding: 1px 8px;">Просрочено</div>
+                </div>
+                <div style="display: flex;">
+                    <div class="task-status" style="background-color: #F38F06; margin: 3px;"></div>
+                    <div style="padding: 1px 8px;">Отменено</div>
+                </div>
+            </div>
         </div>
         <div class="line"></div>
         <div class="vm-task-list-header" style="background-color: #10548a; margin-bottom: 15px; border-radius: 5px;">
@@ -58,59 +90,66 @@
              :key="board.id"
              v-if="blockId == board.blockId && (!boardId || boardId == board.id)"
         >
-	        <div style="height: 33px;"></div>
+            <div style="height: 33px;"></div>
             <div style="padding: 8px 8px 8px 8px; font-weight: bold; background-color: #0d304b; min-width: 170px; text-align: center;
             position: absolute; top: 0px; display: inline-block; border-radius: 10px 10px 0 0; text-decoration: underline;">
-	            {{ board.name }}
+                {{ board.name }}
             </div>
-	        <add-task-button
-		        :user = "currentUser"
-		        :board="board"
-		        :action="openAddTaskForm"
-	        ></add-task-button>
-	        <add-task-button
-		        :title = "'Загрузить Отчет'"
-		        :offset = 150
-		        :user = "currentUser"
-		        :board="board"
-		        :action="downloadBoardReport"
-	        ></add-task-button>
+            <div style="display: flex; position: absolute; right: 0px; top: 0px;">
+                <add-task-button
+                    :title="'Загрузить Отчет'"
+                    :action="downloadBoardReport"
+                    :data="board"
+                >
+                </add-task-button>
+                <add-task-button
+                    v-if="getAccessAddTask(board)"
+                    :title="'Добавить Задачу'"
+                    :action="openAddTaskForm"
+                    :data="board"
+                >
+                </add-task-button>
+            </div>
             <div class="vm-task-list-content-background" style="margin-bottom: 20px;">
-	            <template v-if="board.tasks.length > 0">
+                <template v-if="board.tasks.length > 0">
                     <div class="vm-task-list-content"
-                     v-for="task in board.tasks"
-                     :key="task.id"
-                     @click="openViewTask(board, task)">
-                    <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.executionDate) }">
-                        {{ convertDate(task.endDate) }}
-                    </div>
-                    <div class="row-col-2">
-                        {{ task.progress }}%
-                    </div>
-                    <div class="row-col-3" style="text-align: left; display: flex; align-items: center;">
-                        <div style="width: 32px;">
-                            <img v-if="task.state == 3" src="@/assets/icons/performed.png" width="24">
-                            <img v-else v-show="task.priority > 3" src="@/assets/icons/fire.png" width="24">
+                         v-for="task in board.tasks"
+                         :key="task.id"
+                         @click="openViewTask(board, task)">
+                        <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.executionDate) }">
+                            {{ convertDate(task.endDate) }}
                         </div>
-                        <div>#{{ task.id }}. {{ task.name }}</div>
+                        <div class="row-col-2">
+                            {{ task.progress }}%
+                        </div>
+                        <div class="row-col-3" style="text-align: left; display: flex; align-items: center;">
+                            <div style="width: 24px;">
+							<img v-if="task.id == task.mainTaskId" src="@/assets/icons/home_house.png" width="18" style="position: relative; top: 2px;">
+<!--							<img v-if="task.countChilds" src="@/assets/icons/structure.png" width="16">-->
+<!--                            <img v-if="task.mainTaskId" src="@/assets/icons/structure.png" width="16">-->
+                            </div>
+                            <div style="width: 24px; text-align: center;">
+<!--                                <img v-if="task.state == 6" src="@/assets/icons/performed.png" width="20">-->
+                                <img v-if="task.priority == 5 && task.state == 5" src="@/assets/icons/fire.png" width="24">
+                                <div v-else class="task-miniboard-status" :style="{ background: 'conic-gradient(' + getColorStatus(task) + ', transparent 0)'}"></div>
+                            </div>
+                            <div style="padding-left: 10px;">#{{ task.id }}. {{ task.name }}</div>
+                        </div>
+                        <div class="row-col-4">
+                            {{ getShortUserName(task.initiatorId) }}
+                        </div>
+                        <div class="row-col-5">
+                            {{ getShortUserName(task.executorId) }}
+                        </div>
+                        <div class="row-col-6">
+                            {{ convertDate(task.createDate) }}
+                        </div>
                     </div>
-                    <div class="row-col-4">
-                        {{ getShortUserName(task.initiatorId) }}
+                </template>
+                <template v-else>
+                    <div class="vm-task-list-content" style="padding: 10px 20px; font-weight: bold;">Список задач пуст
                     </div>
-                    <div class="row-col-5">
-                        {{ getShortUserName(task.executorId) }}
-                    </div>
-                    <div class="row-col-6">
-                        {{ convertDate(task.createDate) }}
-                    </div>
-					<div style="width: 32px; text-align: center;">
-						<img v-if="task.count > 0" src="@/assets/icons/tasks-17824321.png" width="24">
-					</div>
-                </div>
-	            </template>
-	            <template v-else>
-					<div class="vm-task-list-content" style="padding: 10px 20px; font-weight: bold;">Список задач пуст</div>
-	            </template>
+                </template>
             </div>
         </div>
     </div>
@@ -118,7 +157,7 @@
 
 <script>
 
-import { mapState } from 'vuex';
+import { mapState, mapMutations, mapGetters } from 'vuex';
 import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import VMViewTask from '@/components/vm/task-view.vue';
 import VMTaskActionComponent from '@/components/vm/task-action-component.vue';
@@ -137,28 +176,27 @@ export default {
                 executor: false,
                 createDate: false
             },
-	        listDepartments: [],
+            listDepartments: [],
             departmentParent: null,
             departmentCurrentId: 0,
-	        blocks: [],
-	        boardId: 0,
-	        blockId: 0
+            boardId: this.$store.state.vm.boardId,
+            blockId: this.$store.state.vm.blockId,
         };
     },
     components: {
         'vm-task-action-component': VMTaskActionComponent,
         DpComboboxComponent,
         VMViewTask,
-	    AddTaskForm,
-	    AddTaskButton
+        AddTaskForm,
+        AddTaskButton
     },
     props: {
         tasks: {
             type: Object
         },
-	    boards: {
-        	type: Array
-	    },
+        boards: {
+            type: Array
+        },
         openViewTask: {
             type: Function
         },
@@ -168,54 +206,59 @@ export default {
     },
     mixins: [],
     computed: {
-        ...mapState('vm', ['currentUser', 'users', 'departments', 'boardBlocks']),
+        ...mapState('vm', ['currentUser', 'users', 'departments', 'boardBlocks', 'blocks', 'boardUsers']),
     },
     watch: {},
     methods: {
 
-    	init() {
+        ...mapMutations('vm', ['setBlockId', 'setBoardId']),
 
-		    for (let boardId in this.boards) {
+        init() {
 
-			    let board = this.boards[boardId];
-			    let block = this.boardBlocks[board.blockId];
+            if (this.blocks.length) return;
 
-			    if (block) {
-				    let add = true;
-				    for (let item of this.blocks) if (item.id == block.id) add = false;
-				    if (add) this.blocks.push(this.boardBlocks[board.blockId]);
-			    }
+            for (let boardId in this.boards) {
 
-			    if (!this.boardId && board.default) {
-				    this.boardId = board.id;
-				    this.blockId = board.blockId;
-			    }
+                let board = this.boards[boardId];
+                let block = this.boardBlocks[board.blockId];
 
-			    if (board.ownerId && board.ownerId == this.currentUser.id) {
-				    this.boardId = board.id;
-				    this.blockId = board.blockId;
-			    }
-		    }
+                if (block) {
+                    let add = true;
+                    for (let item of this.blocks) if (item.id == block.id) add = false;
+                    if (add) this.blocks.push(this.boardBlocks[board.blockId]);
+                }
 
-		    if (!this.blockId && this.blocks.length){
-			    this.blockId = this.blocks[0].id;
-		    }
+                if (!this.boardId && board.default) {
+                    this.boardId = board.id;
+                    this.blockId = board.blockId;
 
-	    },
+                }
 
-        // Форма добавления задачи
-        openAddTaskForm(options) {
-
-            let optionsNew = {};
-
-            if (options) {
-                optionsNew = options;
+                if (board.ownerId && board.ownerId == this.currentUser.id) {
+                    this.boardId = board.id;
+                    this.blockId = board.blockId;
+                }
             }
 
-            optionsNew.buttonAction = this.buttonAction;
-            optionsNew.tasks = this.tasks;
+            if (!this.blockId && this.blocks.length) {
+                this.blockId = this.blocks[0].id;
+            }
 
-            this.$modal.show(AddTaskForm, optionsNew, {
+            this.setBlockId(this.boardId);
+            this.setBoardId(this.blockId);
+
+        },
+
+        // Форма добавления задачи
+        openAddTaskForm(board) {
+
+            let options = {
+                board: board,
+                buttonAction: this.buttonAction,
+                tasks: this.tasks
+            };
+
+            this.$modal.show(AddTaskForm, options, {
                 height: 'auto',
                 width: '800px',
                 clickToClose: false,
@@ -227,25 +270,28 @@ export default {
             let current = new Date();
             current.setHours(0);
             current.setMinutes(0);
-            current.setSeconds(0,0);
+            current.setSeconds(0, 0);
             return state == 1 && current > date ? '#f00' : '#fff';
         },
         convertDate(date) {
-            return date ? date.split('T')[0].split('-').reverse().join('.') : '';
+            return date ? date.split('T')[0].split('-')
+                .reverse()
+                .join('.') : '';
         },
         getNameDepartment(id) {
             return this.departments[id].abbreviation;
         },
-	    hasParentDepartment(id) {
-        	return !!this.departments[id].parentId;
-	    },
+        hasParentDepartment(id) {
+            return !!this.departments[id].parentId;
+        },
         getNameParentDepartment(id) {
             const parentId = this.departments[id].parentId;
             if (!parentId) return 'Отсутствует';
             return this.departments[parentId].abbreviation;
         },
         getShortUserName(userId) {
-        	let user = this.users[userId];
+            if (!userId) return '';
+            let user = this.users[userId];
             let fio = user.name.split(' ');
             if (fio.length == 2) return fio[0] + ' ' + fio[1][0] + '.';
             if (fio.length > 2) return fio[0] + ' ' + fio[1][0] + '.' + fio[2][0] + '.';
@@ -273,12 +319,30 @@ export default {
                 }
             }
         },
-	    downloadBoardReport(options) {
-		    window.location.href = '/dtm/Tasks/getReportBoard/' + options.board.id;
-	    }
+        downloadBoardReport(board) {
+            window.location.href = '/dtm/Tasks/getReportBoard/' + board.id;
+        },
+        getAccessAddTask(board) {
+            if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) return true;
+            if (this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
+            return false;
+        },
+        getColorStatus(task) {
+
+            if (task.state == 5) return  '#257A0D 0 ' + task.progress + '%, #E0E709 0 100%';
+
+            let color ='#';
+            if (task.state == 1) color += 'FFFFFF';   // Планируется
+            else if (task.state == 5) color += 'E0E709';   // В работе
+            else if (task.state == 6) color += '257A0D';   // Выполнено, Завершено
+            else if (task.state == 7) color += 'D41717';   // Просрочено
+            else if (task.state == 8) color += 'F38F06';   // Отменено
+            else color += '0493FC';
+            return color + ' 100%';
+        }
     },
     mounted() {
-		this.init();
+        this.init();
     }
 };
 
@@ -336,6 +400,7 @@ input.Executor {
     &-content-background {
         background-color: #0d304b;
     }
+
     &-content:hover {
         background-color: #0c395a;
     }
@@ -347,11 +412,20 @@ input.Executor {
         min-height: 40px;
         padding: 10px 10px 10px 10px;
         border-bottom: solid 1px $line-color;
-	    border-right: solid 1px $line-color;
+        border-right: solid 1px $line-color;
         margin: 0px 0;
         cursor: pointer;
     }
 
+}
+
+.task-miniboard-status {
+    position: relative;
+    left: 8px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid #fff;
 }
 
 .task-list {
@@ -567,23 +641,41 @@ input.Executor {
 }
 
 .row-col-3 {
-    flex: 0 0 540px;
+    flex: 0 0 670px;
     text-align: center;
 }
 
 .row-col-4 {
-    flex: 0 0 180px;
+    flex: 0 0 160px;
     text-align: center;
 }
 
 .row-col-5 {
-    flex: 0 0 180px;
+    flex: 0 0 160px;
     text-align: center;
 }
 
 .row-col-6 {
-    flex: 0 0 150px;
+    flex: 0 0 100px;
     text-align: center;
+}
+
+.type-states {
+    position: absolute;
+    border: 1px solid #ffffff;
+    background-color: #10548A;
+    padding: 5px 10px;
+    left: -160px;
+    top: 40px;
+    width: 140px;
+}
+
+.task-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 100%;
+    background-color: #ffffff;
+    border: 1px solid #fff;
 }
 
 </style>

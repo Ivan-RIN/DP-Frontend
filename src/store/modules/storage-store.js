@@ -2,7 +2,7 @@ const state = {
 	tasks: [],
 	selectedCDNG: undefined,
 	selectedField: undefined,
-	selectedBrigade: undefined
+	selectedBrigade: undefined,
 };
 
 const getters = {

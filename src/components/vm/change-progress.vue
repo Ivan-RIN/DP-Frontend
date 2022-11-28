@@ -103,8 +103,8 @@ export default {
 
             this.task.progress = this.progress;
 
-            if (this.progress == 100) this.task.state = 2;
-            else this.task.state = 1;
+            if (this.progress == 100) this.task.state = 6;
+            else this.task.state = 5;
 
             let comment = {
                 taskId: this.task.id,

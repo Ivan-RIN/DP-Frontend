@@ -21,11 +21,11 @@
 				@click="activeComponent = 'list-boards'">
 				Борды
 			</button>
-			<button
-				:style="{backgroundColor: activeComponent == 'subtask-scheme' ? '#0c79cd' : ''}"
-				@click="activeComponent = 'subtask-scheme'">
-				Схема
-			</button>
+<!--			<button-->
+<!--				:style="{backgroundColor: activeComponent == 'subtask-scheme' ? '#0c79cd' : ''}"-->
+<!--				@click="activeComponent = 'subtask-scheme'">-->
+<!--				Схема-->
+<!--			</button>-->
             <button
                 :style="{backgroundColor: activeComponent == 'list-users' ? '#0c79cd' : ''}"
                 @click="activeComponent = 'list-users'">
@@ -60,7 +60,7 @@
 
 <script>
 
-import { mapActions, mapState } from 'vuex';
+import { mapActions, mapState, mapMutations } from 'vuex';
 import LoadingMaskComponent from '../common/loading-mask-component.vue';
 import api from '@/api/baseAPI';
 import TaskList from '@/components/vm/task-list.vue';
@@ -103,7 +103,7 @@ export default {
     methods: {
         ...mapActions('vm', ['loadAllVM', 'setRoles']),
         ...mapActions('task', ['setLoaderState']),
-
+        ...mapMutations('vm', ['setBoards']),
 	    async modalButtonAction(buttonName, task) {
             if (buttonName === 'createTask') {
 	            await this.loadData();
@@ -144,6 +144,7 @@ export default {
 						this.tasks[task.id] = task;
 					}
 	            }
+	            this.setBoards(this.boards);
                 this.checkSelectedTask();
                 this.isActive = true;
             }
@@ -166,6 +167,18 @@ export default {
         closeViewTask() {
             this.activeComponent = 'task-list';
         },
+
+		showStructure(taskId) {
+            for (let board of this.boards) {
+                for (let task of board.tasks) {
+                    if (task.id == taskId) {
+                        this.task = task;
+                        break;
+                    }
+                }
+            }
+			this.activeComponent = 'subtask-scheme';
+		},
 
         checkSelectedTask() {
             if (this.$route.params.taskId) {

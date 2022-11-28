@@ -11,18 +11,21 @@
 				        <div style="min-height: 460px; text-align: left; margin-left: 20px; border-right: 1px solid #ffffff;">
 					        <div style="margin-bottom: 16px; font-size: 16px;">Управление задачей</div>
 					        <ul class="nav-ul" style="list-style-type: none; cursor: pointer;font-weight: normal;">
-						        <li @click="editTask()" v-show="currentUser.id == task.initiatorId">- Редактировать</li>
+						        <li @click="editTask()" v-show="currentUser.id == task.initiatorId || currentUser.access.isAdministrator">- Редактировать</li>
 						        <li
 							        @click="uploadFiles()"
-							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Загрузить файлы</li>
+							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId || currentUser.access.isAdministrator">- Загрузить файлы</li>
 						        <li></li>
 						        <li
 							        @click="сhangeProgress()"
-							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Установить прогресс</li>
-						        <li @click="delegateTask()" >- Делегировать задачу</li>
+							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId || currentUser.access.isAdministrator">- Установить прогресс</li>
+                                <li @click="setParentTask()" >- Установить родителя</li>
+                                <li @click="changeBoardTask()" >- Сменить бород</li>
+						        <li v-if="getAccessDelegateTask(board, task)" @click="delegateTask()" >- Делегировать задачу</li>
 						        <li @click="downloadReport()">- Загрузить отчет</li>
+								<li v-show="task.mainTaskId" @click="$parent.showStructure(task.mainTaskId)">- Структура подзадач</li>
 						        <li @click="$parent.closeViewTask()">- Закрыть окно</li>
-						        <li style="margin-top: 30px;" @click="removeTask()" v-show="currentUser.id == task.initiatorId">- Удалить задачу</li>
+						        <li style="margin-top: 30px;" @click="removeTask()" v-show="currentUser.id == task.initiatorId || currentUser.access.isAdministrator">- Удалить задачу</li>
 					        </ul>
 				        </div>
 			        </div>
@@ -76,43 +79,9 @@
 	                </div>
 	                <div class="body-row">
 	                    <div>Инициатор &#8658; Исполнитель</div>
-	                    <div style="display: flex; gap: 20px;">
-	                        <div v-if="taskInitiator" style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
-	                            <div>
-	                                <div class="profile-foto">
-	                                    <img width="64" :src="getFoto(task.initiatorId)" @error="errorFoto($event.target)"/>
-	                                </div>
-	                            </div>
-	                            <div>
-	                                <div style="font-weight: bold;">{{ getUserName(task.initiatorId) }}</div>
-	                                <div>{{ getUserPost(task.initiatorId) }}</div>
-	                                <div>{{ getUserDepartment(task.initiatorId) }}</div>
-	                                <div><span v-html="getUseEmail(task.initiatorId)"></span></div>
-	                                <div>
-		                                <span v-show="taskInitiator.telephone">Тел.: {{ taskInitiator.telephone }}</span>
-	                                    <span v-show="taskInitiator.telephone && taskInitiator.mobile">,&nbsp;</span>
-	                                    <span v-show="taskInitiator.mobile">Сот.: {{ taskInitiator.mobile }}</span>
-	                                </div>
-	                            </div>
-	                        </div>
-	                        <div v-if="taskExecutor" style="display: flex; gap: 20px; padding: 20px; width: 50%; background-color: #0d304b;">
-	                            <div>
-	                                <div class="profile-foto">
-	                                    <img width="64" :src="getFoto(task.executorId)" @error="errorFoto($event.target)"/>
-	                                </div>
-	                            </div>
-	                            <div>
-	                                <div style="font-weight: bold;">{{ getUserName(task.executorId) }}</div>
-	                                <div>{{ getUserPost(task.executorId) }}</div>
-	                                <div>{{ getUserDepartment(task.executorId) }}</div>
-	                                <div><span v-html="getUseEmail(task.executorId)"></span></div>
-	                                <div>
-	                                    <span v-show="taskExecutor.telephone">Тел.: {{ taskExecutor.telephone }}</span>
-	                                    <span v-show="taskExecutor.telephone && taskExecutor.mobile">,&nbsp;</span>
-	                                    <span v-show="taskExecutor.mobile">Сот.: {{ taskExecutor.mobile }}</span>
-	                                </div>
-	                            </div>
-	                        </div>
+	                    <div style="display: flex; gap: 10px;">
+							<dtm-user-card :user="this.users[task.initiatorId]" />
+							<dtm-user-card v-if="task.executorId && task.executorId != task.initiatorId" :user="this.users[task.executorId]" />
 	                    </div>
 	                </div>
 					<div class="body-row">
@@ -133,17 +102,19 @@
 	                </div>
 	                <div class="line"></div>
 	                <div class="body-row">
-	                    <div>Ход выполнения задачи,<br>Комментарий к отчёту</div>
-	                    <div style="padding: 10px; background-color: #0d304b; min-height: 50px;">
-	                        <div v-for="(step, index) in getTaskSteps" :key="step.id"
-	                             style="padding-bottom: 15px;">
+	                    <div>Ход выполнения задачи,<br>Комментарии</div>
+	                    <div style="padding: 8px; background-color: #0d304b;">
+	                        <div v-for="(step, index) in getTaskSteps" :key="step.id">
 	                            <div style="padding: 2px;">
 	                                {{ index + 1 }}. [{{ convertDate(step.userDate) }}] - {{
 	                                    getUserName(step.userId)
 	                                }}
 	                                <span style="float: right">Прогресс {{ step.value }}% </span>
 	                            </div>
-	                            <div style="padding: 8px; border: 1px solid #0e5994; overflow: hidden; margin-top: 2px; white-space: pre-line;">{{ step.comment }}</div>
+                                <template v-if="step.comment.trim()">
+	                                <div style="padding: 2px 20px; overflow: hidden; white-space: pre-line;">{{ step.comment.trim() }}</div>
+                                    <div v-if="index != countTaskSteps" style="height: 8px;"></div>
+                                </template>
 	                        </div>
 	                    </div>
 	                </div>
@@ -173,6 +144,27 @@
 	                    </div>
 	                </div>
 	                <div class="line"></div>
+                    <div class="body-row" v-if="task.countChilds">
+                        <div>Подзадачи</div>
+                        <div style="padding: 10px; background-color: #0d304b;">
+                            <div class="body-row-child" v-for="child in getTaskChilds(task.id)">
+                                <div>
+                                    {{ getShortUserName(child.initiatorId) }}
+                                </div>
+                                <div style="display: flex; position: relative; width: 100%; justify-content: space-between;">
+                                    <div>
+                                        [{{ convertDate(task.endDate) }}]
+                                        [{{ child.progress }}%]
+                                        | #{{ child.id }}, {{ child.name }}
+                                    </div>
+                                    <div style="text-align: right; cursor: pointer;"
+                                         @click="$parent.openViewTaskBy(child.id)">
+                                        Открыть
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 	            </div>
 	        </div>
             <div class="add-task-footer">
@@ -188,22 +180,26 @@ import { mapActions, mapState } from 'vuex';
 import api from '@/api/baseAPI';
 import VMTaskModal from '@/components/vm/task-dp-modal.vue';
 import VMTaskDialog from '@/components/vm/task-dialog.vue';
-import stub_img from '@/assets/images/photo_stub.jpeg';
 import AddTaskForm from '@/components/vm/add-task-form';
 import AddTaskDelegateForm from '@/components/vm/add-task-delegate-form';
 import ChangeProgress from '@/components/vm/change-progress';
 import LoaderFiles from '@/components/vm/loader-files';
 import taskMessage from '@/components/vm/task-message';
+import DtmUserCard from '@/components/vm/dtm-user-card'
+import SetParentTask from '@/components/vm/set-parent-task'
+import ChangeBoardTask from '@/components/vm/change-board-task'
 
 export default {
     name: 'task-view',
     components: {
         'vm-task-dp-modal': VMTaskModal,
-        'vm-task-dialog': VMTaskDialog
+        'vm-task-dialog': VMTaskDialog,
+		DtmUserCard
     },
     data() {
         return {
             comments: [],
+            countTaskSteps: 0
         };
     },
     props: {
@@ -223,7 +219,7 @@ export default {
 
     },
     computed: {
-        ...mapState('vm', ['currentUser', 'users', 'departments']),
+        ...mapState('vm', ['currentUser', 'users', 'departments', 'boardUsers', 'boards']),
 	    taskInitiator() {
 		    return this.users[this.task.initiatorId] ? this.users[this.task.initiatorId] : null;
 	    },
@@ -231,38 +227,33 @@ export default {
         	return this.users[this.task.executorId] ? this.users[this.task.executorId] : null;
 	    },
 	    getTaskSteps() {
+            this.countTaskSteps = this.task.taskSteps.length - 1;
             return this.task.taskSteps.sort((a, b) => a.id > b.id ? 1 : -1);
         }
     },
     methods: {
+
         ...mapActions('task', ['setLoaderState']),
 
-		init() {
-
-		},
+        init() {},
 
         getState(state) {
-            return ['Неизвестный', 'Планируется', 'В работе', 'Выполнено', 'Отменено', 'Просрочено', 'Утверждение', 'Отклоненный'][state];
+            return ['Неизвестный', 'Планируется', 'Отклонено', 'Отложено', 'Утверждено', 'В работе', 'Выполнено', 'Просрочено', 'Отменено'][state];
         },
 
         getUserName(id) {
+            if (!id) return '';
             if (!this.users[id]) return 'Не известный';
             return this.users[id].name;
         },
 
-        getUserPost(id) {
-            if (!this.users[id]) return '';
-            return this.users[id].post;
-        },
-
-        getUseEmail(id, link = true) {
-            if (!this.users[id]) return '';
-            return link ? '<a href="mailto:' + this.users[id].email + '" style="color: #ffffff;">' + this.users[id].email + '</a>' : this.users[id].email;
-        },
-
-        getUserDepartment(id) {
-            if (!this.users[id] || !this.departments[this.users[id].departmentId]) return '';
-            return this.departments[this.users[id].departmentId].name;
+        getShortUserName(userId) {
+            if (!userId) return '';
+            let user = this.users[userId];
+            let fio = user.name.split(' ');
+            if (fio.length == 2) return fio[0] + ' ' + fio[1][0] + '.';
+            if (fio.length > 2) return fio[0] + ' ' + fio[1][0] + '.' + fio[2][0] + '.';
+            return user.name;
         },
 
         getPriority(state) {
@@ -280,17 +271,6 @@ export default {
             } else {
                 return part[0];
             }
-        },
-
-        getFoto(userId) {
-            if (this.users[userId])
-                return 'https://mail.gazprom-neft.local/ews/Exchange.asmx/s/GetUserPhoto?size=HR64x64&email=' + this.users[userId].email;
-            else
-                return stub_img;
-        },
-
-        errorFoto(img) {
-            img.src = stub_img;
         },
 
         getSize: function (size) {
@@ -483,7 +463,110 @@ export default {
 				    let response = await api.put('Tasks/delegateTask/' + this.task.id, this.task);
 			    }
 		    });
-	    }
+	    },
+
+        getAccessDelegateTask(board, task) {
+            if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) return true;
+            //if (this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
+            if (task.executorId == this.currentUser.id) return true;
+            return false;
+        },
+
+        getTaskChilds(parentId) {
+            let childs = [];
+            for (let board of this.boards) {
+                for (let task of board.tasks) {
+                    if (task.parentTaskId == parentId) {
+                        childs.push(task);
+                    }
+                }
+            }
+            return childs;
+        },
+
+        setParentTask() {
+            let self = this;
+            const options = {
+                task: this.task,
+                blockId: this.board.blockId
+            };
+            this.$modal.show(SetParentTask,
+                options,
+                {
+                    height: 'auto',
+                    width: '600px',
+                    clickToClose: false
+                },
+                {
+
+                    async selected(parentId) {
+
+                        self.setLoaderState(true);
+
+                        try{
+
+                            let response = await api.post('Tasks/setParentTask', {
+                                taskId: self.task.id,
+                                parentId: parentId
+                            });
+
+                            if (response.result && response.result == 5) {
+                                self.task.parentTaskId = parentId;
+                                if (self.buttonAction) {
+                                    self.buttonAction('createTask', {id: self.task.id});
+                                }
+                            }
+
+                        } catch (e) {
+                            self.$root.showModalError("Не удалось сменить родителя задачи.");
+                        } finally {
+                            self.setLoaderState(false);
+                        }
+                    }
+                });
+        },
+
+        changeBoardTask() {
+            let self = this;
+            const options = {
+                task: this.task,
+                blockId: this.board.blockId
+            };
+            this.$modal.show(ChangeBoardTask,
+                options,
+                {
+                    height: 'auto',
+                    width: '600px',
+                    clickToClose: false
+                },
+                {
+
+                    async selected(boardId) {
+
+                        self.setLoaderState(true);
+
+                        try{
+
+                            let response = await api.post('Tasks/changeBoardTask', {
+                                taskId: self.task.id,
+                                boardId: boardId
+                            });
+
+                            if (response.result && response.result == 5) {
+                                self.task.boardId = boardId;
+                                if (self.buttonAction) {
+                                    self.buttonAction('createTask', {id: self.task.id});
+                                }
+                            }
+
+                        } catch (e) {
+                            self.$root.showModalError("Не удалось сменить борд задачи.");
+                        } finally {
+                            self.setLoaderState(false);
+                        }
+                    }
+                });
+        }
 
     },
 

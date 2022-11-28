@@ -29,6 +29,9 @@ const downloadList = [
 ];
 
 const state = {
+	blockId: 0,
+	boardId: 0,
+	blocks: [],
 	currentUser: null,
 	listUsers: [],
 	users: {},
@@ -42,7 +45,9 @@ const state = {
 };
 
 const getters = {
-	currentUser: state => state.currentUser
+	currentUser: state => state.currentUser,
+	blockId: state => state.blockId,
+	boardId: state => state.boardId,
 };
 
 let count = 0;
@@ -72,6 +77,15 @@ const actions = {
 };
 
 const mutations = {
+	setBoards(state, payload) {
+		state.boards = payload;
+	},
+	setBlockId(state, payload) {
+		state.blockId = payload;
+	},
+	setBoardId(state, payload) {
+		state.boardId = payload;
+	},
 	setCurrentUser(state, payload) {
 		state.currentUser = payload;
 	},
@@ -114,11 +128,6 @@ const mutations = {
 			state.users[item.id] = item;
 		}
 	},
-	// setBoards(state, payload) {
-	// 	for(let item of payload) {
-	// 		state.boards[item.id] = item;
-	// 	}
-	// },
 	setBoardBlocks(state, payload) {
 		for(let item of payload) {
 			state.boardBlocks[item.id] = item;

@@ -5,16 +5,18 @@
 			<template slot="body">
 				<div style="padding: 10px; font-weight: bold;"> {{ board.block.name }} / {{ board.name }}</div>
 				<div class="line" style="margin: 10px 0px"></div>
-				<div class="add-task-content-data">
-					<div class="add-task-content-data-field" data-field>
+				<div class="add-task-content-data" style="width: 100%;">
+					<div class="add-task-content-data-field" data-field style="width: 100%;">
 						<div data-name>Родительская задача:</div>
-						<div data-value>{{ task.name }}</div>
+						<div style="width: 585px;">
+                            {{ task.name }}
+                        </div>
 					</div>
 				</div>
 				<div class="add-task-content-data">
 					<div class="add-task-content-data-field" data-field>
 						<div data-name>Инициатор</div>
-						<div data-value style="width: 600px;">
+						<div style="width: 585px;">
 							{{ getUserName(task.initiatorId) }}
 						</div>
 					</div>
@@ -36,6 +38,22 @@
 					</div>
 				</div>
 				<div class="line" style="margin: 10px 0px"></div>
+                <div class="add-task-content-data">
+                    <div class="add-task-content-data-field" data-field>
+                        <div data-name>Выберите борд<br>для задачи:</div>
+                        <div data-value>
+                            <select v-model="newTask.boardId" style="margin-left: 5px; width: 180px;">
+                                <option
+                                    v-for="board in listBoards"
+                                    :value="board.id"
+                                    :selected="board.id == newTask.boardId"
+                                >
+                                    {{ board.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 				<div class="add-task-content-data">
 					<div class="add-task-content-data-textarea">
 						<label for="add-task-content-data-textarea-task-name" data-name>
@@ -190,16 +208,17 @@ export default {
 				executorId: 0,
 				endDate: new Date().toISOString(),
 			},
+            userName: '',
 			visibleListExecutor: false,
-			userName: '',
 			dateTo: new Date().toISOString().substr(0, 10),
 			currentDepartment: null,
-			currentDepartments: []
+			currentDepartments: [],
+            listBoards: []
 		};
 	},
 	watch: {},
 	computed: {
-		...mapState('vm', ['currentUser', 'users', 'listUsers', 'departments', 'listDepartments', 'rootDepartments']),
+		...mapState('vm', ['currentUser', 'users', 'listUsers', 'departments', 'listDepartments', 'rootDepartments', 'boards', 'boardBlocks']),
 		filteredList() {
 			let list = [];
 			let users = this.currentDepartment ? this.currentDepartment.users : this.listUsers;
@@ -219,12 +238,17 @@ export default {
 			...mapActions('task', ['setLoaderState']),
 
 			init() {
+
 				this.newTask.boardId = this.board.id;
-				this.newTask.initiatorId = this.currentUser.id;
-				if (this._task) {
-					this.newTask = this._task;
-					this.userName = this.getUserName(this.newTask.executorId);
-				}
+				this.newTask.initiatorId = this.task.executorId;
+				this.currentBoardId = this.task.boardId;
+
+                for (let boardId in this.boards) {
+                    let board = this.boards[boardId];
+                    if (board.blockId == this.board.block.id) {
+                        this.listBoards.push(board);
+                    }
+                }
 			},
 
 			getUserName(id) {
@@ -356,7 +380,7 @@ export default {
 				if (self._task) {
 					//task = await apiTasks.put(self.task.id, self.task);
 				} else {
-          resTask  = await api.post('Tasks/delegateTask/' + self.task.id, self.newTask);
+                    resTask  = await api.post('Tasks/delegateTask/' + self.task.id, self.newTask);
 				}
 
 				self.setLoaderState(false);

@@ -134,7 +134,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapState('vm', ['currentUser', 'users', 'organizations', 'departments', 'boardBlocks']),
+		...mapState('vm', ['currentUser', 'users', 'organizations', 'departments', 'boardBlocks', 'boardUsers']),
 		getInitiators() {
 			if (!this.board.users) return [];
 			let list = [];
@@ -159,7 +159,7 @@ export default {
 	methods: {
 		...mapActions('task', ['setLoaderState']),
 		getOrganizationName(id) {
-			return this.organizations[id].shortName;
+            return this.organizations[id] ? this.organizations[id].shortName : '';
 		},
 		getUserName(userId) {
 			return this.users[userId].name;
@@ -214,6 +214,8 @@ export default {
 								});
 
 								if (response.result && response.result == 5) {
+
+                                    self.boardUsers[self.board.id] = 3;
 
 									let add = true;
 									self.board.users.forEach(user => {
@@ -302,6 +304,8 @@ export default {
 					userId: id,
 					roleId: 0
 				});
+
+                if (this.boardUsers[this.board.id]) delete this.boardUsers[this.board.id];
 
 				this.board.users = this.board.users.filter(value => value.userId != id);
 

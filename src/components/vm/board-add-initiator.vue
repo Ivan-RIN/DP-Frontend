@@ -157,6 +157,7 @@ export default {
 		},
 		// Выберите имя исполнителя
 		setExecutorId(id) {
+		    if (!id) return;
 			this.userName = this.users[id].name;
 			this.userId = id;
 			this.visible = false;
