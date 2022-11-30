@@ -95,7 +95,7 @@
             position: absolute; top: 0px; display: inline-block; border-radius: 10px 10px 0 0; text-decoration: underline;">
                 {{ board.name }}
             </div>
-            <div style="display: flex; position: absolute; right: 0px; top: 0px;">
+            <div style="display: flex; position: absolute; right: 0px; top: -2px; gap: 5px;">
                 <add-task-button
                     :title="'Загрузить Отчет'"
                     :action="downloadBoardReport"
@@ -324,6 +324,7 @@ export default {
         },
         getAccessAddTask(board) {
             if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) return true;
+            if (board.ownerId && this.currentUser.id == board.ownerId) return true;
             if (this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
             return false;
         },

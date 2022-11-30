@@ -3,24 +3,24 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Подразделение</th>
                     <th>ФИО</th>
                     <th>Должность</th>
                     <th>Почта</th>
-                    <th>Задач на контроле</th>
-                    <th>Задач на исполнении</th>
+<!--                    <th>Задач на контроле</th>-->
+<!--                    <th>Задач на исполнении</th>-->
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="user in users" :key="user.id">
-                    <td>#{{ user.id }}</td>
+                <tr v-for="(user, index) in users" :key="user.id">
+                    <td>{{ index }}.</td>
                     <td>{{ getUserDepartment(user.departmentId) }}</td>
                     <td>{{ user.name }}</td>
                     <td>{{ user.post }}</td>
                     <td>{{ user.email }}</td>
-                    <td></td>
-                    <td></td>
+<!--                    <td></td>-->
+<!--                    <td></td>-->
                 </tr>
             </tbody>
         </table>
@@ -82,7 +82,7 @@ table thead tr {
 }
 
 table th, table td {
-    padding: 8px 16px;
+    padding: 4px 8px;
 }
 
 table tr:nth-child(3n+3) {
@@ -95,11 +95,15 @@ table tbody tr:hover {
 }
 
 table th:nth-child(1) {
-    width: 80px;
+    min-width: 40px;
 }
 
 table th:nth-child(2) {
     width: 80px;
+}
+
+table th:nth-child(3) {
+    width: 280px;
 }
 
 table tbody td:nth-child(6) {

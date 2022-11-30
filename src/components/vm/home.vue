@@ -19,7 +19,7 @@
 			<button
 				:style="{backgroundColor: activeComponent == 'list-boards' ? '#0c79cd' : ''}"
 				@click="activeComponent = 'list-boards'">
-				Борды
+				Доски ВУ
 			</button>
 <!--			<button-->
 <!--				:style="{backgroundColor: activeComponent == 'subtask-scheme' ? '#0c79cd' : ''}"-->

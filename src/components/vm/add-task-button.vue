@@ -24,15 +24,17 @@ export default {
 
 <style scoped>
 	.style {
-		font-weight: bold;
-		padding: 8px 20px 8px 20px;
-		border-radius: 10px 10px 0px 0px;
+
+		padding: 6px 10px 6px 10px;
+		border-radius: 5px 5px 5px 5px;
 		cursor: pointer;
 		background-color: #0d304b; /* 0d304b, 0c395a */
-		border-top: 1px solid #10548a;
-		border-right: 1px solid #10548a;
+		border-top: 1px solid #197ccf;
+		border-right: 1px solid #197ccf;
+        background-color: #10548A;
 	}
 	.style:hover {
-		background-color: #0c395a;
+        font-weight: bold;
+		background-color: #1a70b7;
 	}
 </style>

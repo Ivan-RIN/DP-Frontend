@@ -8,7 +8,7 @@
 			<div class="add-task-content" style="display: flex;">
 				<div style="width: 18%; border-right: 1px solid #ffffff; padding: 10px; margin-right: 20px;">
 					<div style="margin-bottom: 16px; font-size: 16px;">Управление</div>
-					<div class="navigation">
+					<div class="navigation" v-if="currentUser.access.isDeveloper || currentUser.access.isAdministrator || (board.ownerId && currentUser.id == board.ownerId)">
 						<div @click="appendOwner" style="padding: 4px 10px;">- Установить владельца</div>
 						<div @click="addInitiator" style="padding: 4px 10px;">- Добавить инициатора</div>
 						<div @click="addDepartment" style="padding: 4px 10px;">- Добавить подразделение</div>
@@ -59,7 +59,8 @@
 										- [{{ getNameUserDepartment(initiator.userId) }}]
 										{{ getUserName(initiator.userId) }}
 								</div>
-								<div @click="removeUser(initiator.userId)" style="cursor: pointer; color: #dd0f0f;">
+								<div v-if="currentUser.access.isDeveloper || currentUser.access.isAdministrator || (board.ownerId && currentUser.id == board.ownerId)"
+                                    @click="removeUser(initiator.userId)" style="cursor: pointer; color: #dd0f0f;">
 									<img style="height: 14px; padding: 0 8px;" src="@/assets/icons/user-remove.png">
 									<span>Удалить</span>
 								</div>
@@ -77,7 +78,8 @@
 								<div style="min-width: 300px;">
 									- {{ getNameSortDepartment(department.departmentId) }}
 								</div>
-								<div @click="removeDepartment(department.departmentId)" style="cursor: pointer; color: #dd0f0f;">
+								<div v-if="currentUser.access.isDeveloper || currentUser.access.isAdministrator || (board.ownerId && currentUser.id == board.ownerId)"
+                                    @click="removeDepartment(department.departmentId)" style="cursor: pointer; color: #dd0f0f;">
 									<img style="height: 14px; padding: 0 8px;" src="@/assets/icons/user-remove.png">
 									<span>Удалить</span>
 								</div>
@@ -95,7 +97,8 @@
 								<div style="min-width: 300px;">
 									- [{{ getNameUserDepartment(user.userId) }}] {{ getUserName(user.userId) }}
 								</div>
-								<div @click="removeUser(user.userId)" style="cursor: pointer; color: #dd0f0f;">
+								<div v-if="currentUser.access.isDeveloper || currentUser.access.isAdministrator || (board.ownerId && currentUser.id == board.ownerId)"
+                                    @click="removeUser(user.userId)" style="cursor: pointer; color: #dd0f0f;">
 									<img style="height: 14px; padding: 0px 8px;" src="@/assets/icons/user-remove.png">
 									<span>Удалить</span>
 								</div>
@@ -162,9 +165,10 @@ export default {
             return this.organizations[id] ? this.organizations[id].shortName : '';
 		},
 		getUserName(userId) {
-			return this.users[userId].name;
+			return this.users[userId] ? this.users[userId].name : ''
 		},
 		getShortUserName(userId) {
+		    if (!this.users[userId]) return '';
 			let user = this.users[userId];
 			let fio = user.name.split(' ');
 			if (fio.length == 2) return fio[0] + ' ' + fio[1][0] + '.';
@@ -172,15 +176,16 @@ export default {
 			return user.name;
 		},
 		getNameUserDepartment(userId) {
+            if (!this.users[userId]) return '';
 			let depId = this.users[userId].departmentId;
 			if (depId) return this.departments[depId].abbreviation;
 			return '*';
 		},
 		getNameDepartment(id) {
-			return this.departments[id].name;
+			return this.departments[id] ? this.departments[id].name : '';
 		},
 		getNameSortDepartment(id) {
-			return this.departments[id].abbreviation;
+			return this.departments[id] ? this.departments[id].abbreviation : '';
 		},
 		getDepartments() {
 			return this.board.departments ? this.board.departments : [];

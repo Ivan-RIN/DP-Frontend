@@ -52,11 +52,15 @@ export default {
         }
     },
     mounted() {
-        this.boardId = this.task.boardId;
         for (let board of this.boards) {
             if (board.blockId == this.blockId) {
-                this.listBoards.push(board);
+                if (board.id != this.task.boardId) {
+                    this.listBoards.push(board);
+                }
             }
+        }
+        if (this.listBoards.length) {
+            this.boardId = this.listBoards[0].id;
         }
     }
 }

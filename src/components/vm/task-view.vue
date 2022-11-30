@@ -11,21 +11,21 @@
 				        <div style="min-height: 460px; text-align: left; margin-left: 20px; border-right: 1px solid #ffffff;">
 					        <div style="margin-bottom: 16px; font-size: 16px;">Управление задачей</div>
 					        <ul class="nav-ul" style="list-style-type: none; cursor: pointer;font-weight: normal;">
-						        <li @click="editTask()" v-show="currentUser.id == task.initiatorId || currentUser.access.isAdministrator">- Редактировать</li>
+						        <li @click="editTask()" v-show="currentUser.access.isAdministrator || currentUser.id == task.initiatorId || (board.ownerId && currentUser.id == board.ownerId)">- Редактировать</li>
 						        <li
 							        @click="uploadFiles()"
-							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId || currentUser.access.isAdministrator">- Загрузить файлы</li>
+							        v-show=" currentUser.access.isAdministrator || (board.ownerId && currentUser.id == board.ownerId) || currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Загрузить файлы</li>
 						        <li></li>
 						        <li
 							        @click="сhangeProgress()"
-							        v-show="currentUser.id == task.initiatorId || currentUser.id == task.executorId || currentUser.access.isAdministrator">- Установить прогресс</li>
-                                <li @click="setParentTask()" >- Установить родителя</li>
-                                <li @click="changeBoardTask()" >- Сменить бород</li>
+							        v-show="currentUser.access.isAdministrator || (board.ownerId && currentUser.id == board.ownerId) || currentUser.id == task.initiatorId || currentUser.id == task.executorId">- Изменить статус</li>
+<!--                                <li @click="setParentTask()" >- Установить родителя</li>-->
+                                <li v-show="getAccessChangeBoard(board, task) && !task.parentTaskId" @click="changeBoardTask()" >- Перенести в доску</li>
 						        <li v-if="getAccessDelegateTask(board, task)" @click="delegateTask()" >- Делегировать задачу</li>
 						        <li @click="downloadReport()">- Загрузить отчет</li>
 								<li v-show="task.mainTaskId" @click="$parent.showStructure(task.mainTaskId)">- Структура подзадач</li>
-						        <li @click="$parent.closeViewTask()">- Закрыть окно</li>
-						        <li style="margin-top: 30px;" @click="removeTask()" v-show="currentUser.id == task.initiatorId || currentUser.access.isAdministrator">- Удалить задачу</li>
+<!--						        <li @click="$parent.closeViewTask()">- Закрыть окно</li>-->
+						        <li style="margin-top: 30px;" @click="removeTask()" v-show="!task.countChilds && ((board.ownerId && currentUser.id == board.ownerId) || currentUser.id == task.initiatorId || currentUser.access.isAdministrator) ">- Удалить задачу</li>
 					        </ul>
 				        </div>
 			        </div>
@@ -467,8 +467,14 @@ export default {
 
         getAccessDelegateTask(board, task) {
             if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) return true;
-            //if (this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
-            if (task.executorId == this.currentUser.id) return true;
+            if (task.executorId == this.currentUser.id && this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
+            return false;
+        },
+
+        getAccessChangeBoard(board, task) {
+            if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) return true;
+            if (this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
+            if (board.ownerId && this.currentUser.id == board.ownerId) return true;
             return false;
         },
 
@@ -548,6 +554,7 @@ export default {
                         try{
 
                             let response = await api.post('Tasks/changeBoardTask', {
+                                mode: 1,
                                 taskId: self.task.id,
                                 boardId: boardId
                             });
