@@ -13,8 +13,8 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(user, index) in users" :key="user.id">
-                    <td>{{ index }}.</td>
+                <tr v-for="(user, index) in users" v-if="user.id > 99" :key="user.id">
+                    <td>{{ getCount() }}.</td>
                     <td>{{ getUserDepartment(user.departmentId) }}</td>
                     <td>{{ user.name }}</td>
                     <td>{{ user.post }}</td>
@@ -30,13 +30,22 @@
 <script>
 
 import { mapState } from 'vuex';
-
+let count = 1;
 export default {
+
     name: "list-users",
     computed: {
-        ...mapState('vm', ['boards', 'departments', 'users']),
+        ...mapState('vm', ['boards', 'departments', 'users'])
+    },
+    data() {
+        return {
+            count: 1
+        }
     },
     methods: {
+        getCount() {
+            return count++;
+        },
         getUserDepartment(depId) {
             if (this.departments[depId]) return this.departments[depId].abbreviation;
             return '';
@@ -64,6 +73,9 @@ export default {
             }
             return count;
         }
+    },
+    mounted() {
+        count = 1;
     }
 }
 

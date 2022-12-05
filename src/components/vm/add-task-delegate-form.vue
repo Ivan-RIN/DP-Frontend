@@ -331,6 +331,7 @@ export default {
 			},
 
 			setUserCurrentDepartment() {
+                if (!this.currentUser.departmentId) return;
 				let dep = this.departments[this.currentUser.departmentId];
 				this.currentDepartment = dep;
 				this.currentDepartments.unshift(dep);
@@ -388,9 +389,7 @@ export default {
 				if (resTask.errorMessage) {
 					self.$root.showModalError(resTask);
 				} else {
-					if (this.buttonAction) {
-						this.buttonAction('createTask', resTask);
-					}
+                    setUserCurrentDepartment
 					self.$emit('close');
 				}
 

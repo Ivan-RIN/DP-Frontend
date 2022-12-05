@@ -31,15 +31,23 @@
 							</div>
 						</div>
 					</div>
+                    <div class="body-row">
+                        <div>Тип доступа:</div>
+                        <div>{{ getAccessType(board.accessType) }}</div>
+                    </div>
 					<div class="body-row">
 						<div>Организация:</div>
 						<div>{{ getOrganizationName(board.organizationId) }}</div>
 					</div>
+                    <div class="body-row" v-if="board.departmentId">
+                        <div>Подразделение:</div>
+                        <div>{{ getNameDepartment(board.departmentId) }}</div>
+                    </div>
 					<div class="body-row" v-if="ownerId">
 						<div>Владелец борда:</div>
 						<div>{{ getOwnerName }}</div>
 					</div>
-					<div class="body-row" v-if="board.adminId">
+					<div class="body-row" v-if="false && board.adminId">
 						<div>Администратор:</div>
 						<div>{{ getUserName(board.adminId) }}</div>
 					</div>
@@ -190,6 +198,9 @@ export default {
 		getDepartments() {
 			return this.board.departments ? this.board.departments : [];
 		},
+        getAccessType(type) {
+		    return ['', 'Частный', 'Локальный', 'Групповой', '', 'Публичный'][type];
+        },
 
 		addInitiator() {
 			let self = this;

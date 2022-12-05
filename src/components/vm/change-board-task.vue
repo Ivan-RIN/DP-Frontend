@@ -38,7 +38,7 @@ export default {
         }
     },
     computed: {
-        ...mapState('vm', ['currentUser', 'boards']),
+        ...mapState('vm', ['currentUser', 'boards', 'boardUsers']),
     },
     methods: {
 
@@ -54,7 +54,11 @@ export default {
     mounted() {
         for (let board of this.boards) {
             if (board.blockId == this.blockId) {
-                if (board.id != this.task.boardId) {
+                if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) {
+                  this.listBoards.push(board);
+                  continue;
+                }
+                if (board.id != this.task.boardId && this.boardUsers[board.id] && this.boardUsers[board.id] > 1) {
                     this.listBoards.push(board);
                 }
             }

@@ -1,7 +1,7 @@
 <template>
     <div class="task-list">
         <div style="display: flex;">
-            <select v-model="blockId" @change="setBlockId(blockId); setBoardId(0); boardId = 0">
+            <select v-model="blockId" @change="boardId = 0">
                 <option
                     v-for="(block) in blocks"
                     :key="block.id"
@@ -11,7 +11,7 @@
                     {{ block.name }}
                 </option>
             </select>
-            <select v-model="boardId" style="margin-left: 5px;" @change="setBoardId(boardId)">
+            <select v-model="boardId" style="margin-left: 5px;">
                 <option :value="0" style="font-weight: bold;">Все задачи</option>
                 <option
                     v-for="(board) in boards"
@@ -116,7 +116,7 @@
                          v-for="task in board.tasks"
                          :key="task.id"
                          @click="openViewTask(board, task)">
-                        <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.executionDate) }">
+                        <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.endDate) }">
                             {{ convertDate(task.endDate) }}
                         </div>
                         <div class="row-col-2">
@@ -208,7 +208,14 @@ export default {
     computed: {
         ...mapState('vm', ['currentUser', 'users', 'departments', 'boardBlocks', 'blocks', 'boardUsers']),
     },
-    watch: {},
+    watch: {
+        blockId() {
+            this.setBlockId(this.blockId);
+        },
+        boardId() {
+            this.setBoardId(this.boardId);
+        }
+    },
     methods: {
 
         ...mapMutations('vm', ['setBlockId', 'setBoardId']),
@@ -229,23 +236,20 @@ export default {
                 }
 
                 if (!this.boardId && board.default) {
-                    this.boardId = board.id;
                     this.blockId = board.blockId;
-
+                    this.boardId = board.id;
                 }
 
                 if (board.ownerId && board.ownerId == this.currentUser.id) {
-                    this.boardId = board.id;
                     this.blockId = board.blockId;
+                    this.boardId = board.id;
                 }
+
             }
 
             if (!this.blockId && this.blocks.length) {
                 this.blockId = this.blocks[0].id;
             }
-
-            this.setBlockId(this.boardId);
-            this.setBoardId(this.blockId);
 
         },
 
@@ -264,14 +268,13 @@ export default {
                 clickToClose: false,
             });
         },
-
-        overdueDateColor(state, executionDate) {
-            let date = new Date(executionDate);
+        overdueDateColor(state, endDate) {
+            let date = new Date(endDate);
             let current = new Date();
             current.setHours(0);
             current.setMinutes(0);
             current.setSeconds(0, 0);
-            return state == 1 && current > date ? '#f00' : '#fff';
+            return state == 5 && current > date ? '#f00' : '#fff';
         },
         convertDate(date) {
             return date ? date.split('T')[0].split('-')
@@ -320,12 +323,24 @@ export default {
             }
         },
         downloadBoardReport(board) {
-            window.location.href = '/dtm/Tasks/getReportBoard/' + board.id;
+            window.location.href = '/dtm-api/Tasks/getReportBoard/' + board.id;
         },
         getAccessAddTask(board) {
-            if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator) return true;
-            if (board.ownerId && this.currentUser.id == board.ownerId) return true;
-            if (this.boardUsers[board.id] && this.boardUsers[board.id] > 1) return true;
+            if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator)
+                return true;
+            if (board.ownerId && this.currentUser.id == board.ownerId)
+                return true;
+            if (board.accessType == 1 &&
+                (this.boardUsers[board.id] && this.boardUsers[board.id] > 1))
+                return true;
+            if (board.accessType == 2 &&
+                (board.departmentId == this.currentUser.departmentId) ||
+                (this.boardUsers[board.id] && this.boardUsers[board.id] > 1))
+                return true;
+            if (board.accessType == 3 &&
+                (board.departmentId == this.currentUser.departmentId) ||
+                (this.boardUsers[board.id] && this.boardUsers[board.id]))
+                return true;
             return false;
         },
         getColorStatus(task) {

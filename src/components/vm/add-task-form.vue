@@ -263,6 +263,7 @@ export default {
         },
 
         setUserCurrentDepartment() {
+            if (!this.currentUser.departmentId) return;
             let dep = this.departments[this.currentUser.departmentId];
             this.currentDepartment = dep;
             this.currentDepartments.unshift(dep);
