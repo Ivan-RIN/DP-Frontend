@@ -70,7 +70,7 @@ export default {
 		},
 
 		getDepartment() {
-			this.departments[this.user.departmentId].name;
+			return this.user.departmentId && this.departments[this.user.departmentId] ? this.departments[this.user.departmentId].name : '';
 		},
 
 		getEmail() {

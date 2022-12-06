@@ -17,7 +17,7 @@
                         </div>
                     </div>
                 </div>
-                <div style="padding: 10px;">
+                <div style="padding: 10px;" v-if="task.initiatorId != task.executorId">
                     <div style="font-weight: bold; font-size: 14px;">Исполнитель:</div>
                     <div style="display: flex;">
                         <div>
@@ -51,12 +51,12 @@ export default {
 	data() {
 		return {
             initiator: true,
-            executor: true,
+            executor: this.task.initiatorId != this.task.executorId,
 			listUsers: []
 		}
 	},
 	computed: {
-		...mapState('vm', ['currentUser', 'users', 'listUsers', 'departments', 'listDepartments', 'rootDepartments']),
+		...mapState('vm', ['currentUser', 'users', 'departments', 'listDepartments', 'rootDepartments']),
 	},
 	methods: {
         getUserName(userId) {

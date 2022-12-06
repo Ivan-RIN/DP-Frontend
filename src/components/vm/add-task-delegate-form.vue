@@ -259,6 +259,7 @@ export default {
 			convertDate(date, full = false) {
 				if (!date) return '';
 				let part = date.split('T');
+				if (part.length == 1) return part[0];
 				part[0] = part[0].split('-').reverse().join('.');
 				part[1] = part[1].split('.')[0];
 				if (full) {
