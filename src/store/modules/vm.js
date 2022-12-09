@@ -144,6 +144,7 @@ const mutations = {
 			let user = state.users[id];
 			if (user.departmentId) {
 				let dep = state.departments[user.departmentId];
+				if (!dep) continue;
 				dep.users.push(user);
 				while (dep.parentId) {
 					dep = state.departments[dep.parentId];

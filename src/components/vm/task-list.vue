@@ -116,7 +116,7 @@
                          v-for="task in board.tasks"
                          :key="task.id"
                          @click="openViewTask(board, task)">
-                        <div class="row-col-1" :style="{ color: overdueDateColor(task.state, task.endDate) }">
+                        <div class="row-col-1" :style="{ color: task.state == 7 ? '#f00' : '#fff' }">
                             {{ convertDate(task.endDate) }}
                         </div>
                         <div class="row-col-2">

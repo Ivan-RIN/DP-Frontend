@@ -359,7 +359,8 @@ export default {
 
 							let options = {
 								title: 'Внимание!',
-								content: '<p>Вы установили прогресс выполнения задачи в 100%, состояние текущей задачи будет автоматически обновлен до статуса "Выполнено".</p>'
+								content: `<p>Вы установили прогресс выполнения задачи в 100%, состояние текущей задачи будет автоматически обновлен до статуса "Выполнено"` +
+									` и отправлены уведомления на почту.</p>`
 							};
 
 							self.$modal.show(taskMessage, options, {
@@ -367,6 +368,30 @@ export default {
 								width: '600px',
 								clickToClose: false
 							});
+
+							let _recipients = [];
+
+							if (self.task.initiatorId == self.task.executorId || !self.task.executorId) {
+								_recipients.push({
+									taskId: self.task.id,
+									userId: self.task.initiatorId,
+									mailId: 2
+								});
+							} else {
+								_recipients.push({
+									taskId: self.task.id,
+									userId: self.task.initiatorId,
+									mailId: 2
+								});
+								_recipients.push({
+									taskId: self.task.id,
+									userId: self.task.executorId,
+									mailId: 2
+								});
+							}
+
+							await api.post('Tasks/sendTaskMail', _recipients);
+
 						}
 
 					}
