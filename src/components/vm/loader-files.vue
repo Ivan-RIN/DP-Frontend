@@ -11,6 +11,7 @@
 	            <div>
 					<p>Типы разрешенных файлов: {{ this.exts.join(', ') }}</p>
 		            <p>Максимальный размер файла, не более {{ getSize(maxSize) }}</p>
+					<p>Общий размер файлов, не более {{ getSize(maxSize * maxFiles) }}</p>
 		            <p>Количество загружаемых файлов за раз, не более {{ maxFiles }}</p>
 	            </div>
                 <h3 style="font-weight: bold; margin-top: 10px;">Файлы:</h3>
@@ -50,8 +51,8 @@ export default {
     data() {
         return {
 	        maxFiles: 5,
-	        maxSize: 1048576 * 10,
-	        exts: ['.pdf', '.png', '.jpeg', '.doc', '.docx', '.xls', '.xlsx', '.pptx', '.ppt'],
+	        maxSize: 1048576 * 20,
+	        exts: ['.pdf', '.png', '.jpeg', '.doc', '.docx', '.xls', '.xlsx', '.pptx', '.ppt', '.msg'],
             date: undefined,
             files: [],
             inputFiles: undefined,

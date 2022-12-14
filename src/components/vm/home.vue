@@ -130,21 +130,32 @@ export default {
 		// Загрузка задач
 		async loadData() {
 
-			DTM.init();
+			//DTM.init();
 
 			this.setLoaderState(true);
 
 			if (this.currentUser.access && this.currentUser.access.isActive) {
+
 				let overdueTasks = [];
+
 				this.boards = await api.get('Loader/getBoards');
 				for (let boardId in this.boards) {
+
 					let board = this.boards[boardId];
 					let block = this.boardBlocks[board.blockId];
 					if (block) board.block = block;
+
 					for (let i in board.tasks) {
 						let task = board.tasks[i];
 						this.tasks[task.id] = task;
-						if (task.state == 5 && this.checkOverdue(task.endDate)) {
+
+						let endDate = new Date(task.endDate);
+						task.endDate = endDate.toLocaleDateString().split('.').reverse().join('-');
+
+						let createDate = new Date(task.createDate);
+						task.createDate = createDate.toLocaleDateString().split('.').reverse().join('-') + 'T' + createDate.toLocaleTimeString();
+
+						if (task.state == 5 && this.checkOverdue(endDate)) {
 							task.state = 7;
 							overdueTasks.push(task);
 						}
@@ -164,7 +175,6 @@ export default {
 		},
 
 		checkOverdue(endDate) {
-			endDate = new Date(endDate);
 			let currentDate = new Date();
 			currentDate.setHours(0);
 			currentDate.setMinutes(0);
@@ -178,7 +188,9 @@ export default {
 			let _tasks = [];
 
 			for (let task of tasks) {
-				_tasks.push(task.id)
+
+				_tasks.push(task.id);
+
 				if (task.initiatorId == task.executorId || !task.executorId) {
 					_recipients.push({
 						taskId: task.id,

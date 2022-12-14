@@ -50,7 +50,7 @@ export default {
 	props: ['task'],
 	data() {
 		return {
-            initiator: true,
+            initiator: false,
             executor: this.task.initiatorId != this.task.executorId,
 			listUsers: []
 		}

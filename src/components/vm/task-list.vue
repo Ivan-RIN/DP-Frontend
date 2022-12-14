@@ -57,7 +57,7 @@
             <div class="row-col-1" style="cursor: pointer;"
                  @click="sortTasks('executionDate')"
             >
-                Дата исполнения
+                Срок исполнения
             </div>
             <div class="row-col-2" style="cursor: pointer;"
                  @click="sortTasks('execution')"
