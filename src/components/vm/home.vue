@@ -134,6 +134,8 @@ export default {
 
 			this.setLoaderState(true);
 
+			this.closeViewTask();
+
 			if (this.currentUser.access && this.currentUser.access.isActive) {
 
 				let overdueTasks = [];
@@ -144,17 +146,15 @@ export default {
 					let board = this.boards[boardId];
 					let block = this.boardBlocks[board.blockId];
 					if (block) board.block = block;
-
+					board.allTasks = [];
 					for (let i in board.tasks) {
 						let task = board.tasks[i];
 						this.tasks[task.id] = task;
-
+						board.allTasks.push(task);
 						let endDate = new Date(task.endDate);
 						task.endDate = endDate.toLocaleDateString().split('.').reverse().join('-');
-
 						let createDate = new Date(task.createDate);
 						task.createDate = createDate.toLocaleDateString().split('.').reverse().join('-') + 'T' + createDate.toLocaleTimeString();
-
 						if (task.state == 5 && this.checkOverdue(endDate)) {
 							task.state = 7;
 							overdueTasks.push(task);
@@ -260,11 +260,10 @@ export default {
 		},
 
 		async removeTask(task) {
-			this.closeViewTask();
 			this.setLoaderState(true);
-			let res = await api.delete('Tasks/' + task.id);
-			this.loadData();
+			await api.delete('Tasks/' + task.id);
 			this.setLoaderState(false);
+			await this.loadData();
 		},
 
 	},

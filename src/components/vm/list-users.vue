@@ -13,7 +13,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(user, index) in users" v-if="user.id > 99" :key="user.id">
+                <tr v-for="(user, index) in listUsers" v-if="user.id > 99" :key="user.id">
                     <td>{{ getCount() }}.</td>
                     <td>{{ getUserDepartment(user.departmentId) }}</td>
                     <td>{{ user.name }}</td>
@@ -35,7 +35,7 @@ export default {
 
     name: "list-users",
     computed: {
-        ...mapState('vm', ['boards', 'departments', 'users'])
+        ...mapState('vm', ['boards', 'departments', 'listUsers'])
     },
     data() {
         return {

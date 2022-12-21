@@ -158,7 +158,6 @@ export default {
 		DatePickerComponent,
 		PerformanceCriterionsComponent,
 		LoadingMaskComponent,
-		ListMailUsers,
 		SelectUsers
 	},
 	mixins: [globalMethods],

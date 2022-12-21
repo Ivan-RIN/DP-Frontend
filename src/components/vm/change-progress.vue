@@ -101,12 +101,7 @@ export default {
         },
         save() {
 
-            this.task.progress = this.progress;
-
-            if (this.progress == 100) this.task.state = 6;
-            else this.task.state = 5;
-
-            let comment = {
+            let progress = {
                 taskId: this.task.id,
                 userId: this.currentUser.id,
 	            userDate: this.date ? this.date : new Date().toISOString(),
@@ -121,7 +116,7 @@ export default {
             } : null;
 
             this.$emit('close');
-            this.$parent.$emit('save', comment, files);
+            this.$parent.$emit('save', progress, files);
         },
     },
     mounted() {

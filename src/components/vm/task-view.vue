@@ -12,6 +12,14 @@
 							style="min-height: 460px; text-align: left; margin-left: 20px; border-right: 1px solid #ffffff;">
 							<div style="margin-bottom: 16px; font-size: 16px;">Управление задачей</div>
 							<ul class="nav-ul" style="list-style-type: none; cursor: pointer;font-weight: normal;">
+								<li @click="conformTask()"
+									v-show="task.state == 8 && (currentUser.access.isAdministrator || currentUser.id == board.ownerId || currentUser.id == task.initiatorId)">
+									- Согласовать
+								</li>
+								<li @click="sendArchive()"
+									v-show="task.state == 6 && (currentUser.access.isAdministrator || currentUser.id == board.ownerId || currentUser.id == task.initiatorId)">
+									- Отправить в архив
+								</li>
 								<li @click="editTask()"
 									v-show="currentUser.access.isAdministrator || currentUser.id == task.initiatorId || (board.ownerId && currentUser.id == board.ownerId)">
 									- Редактировать
@@ -209,10 +217,13 @@ import AddTaskForm from '@/components/vm/add-task-form';
 import AddTaskDelegateForm from '@/components/vm/add-task-delegate-form';
 import ChangeProgress from '@/components/vm/change-progress';
 import LoaderFiles from '@/components/vm/loader-files';
-import taskMessage from '@/components/vm/task-message';
+//import taskMessage from '@/components/vm/task-message';
 import DtmUserCard from '@/components/vm/dtm-user-card';
 import SetParentTask from '@/components/vm/set-parent-task';
 import ChangeBoardTask from '@/components/vm/change-board-task';
+import MailAlertInitiator from '@/components/vm/mail-alert-initiator';
+import MailTaskCompleted from '@/components/vm/mail-task-completed';
+import DialogWindow from '@/components/vm/dialog-window';
 
 export default {
 	name: 'task-view',
@@ -262,7 +273,7 @@ export default {
 		},
 
 		getState(state) {
-			return ['Неизвестный', 'Планируется', 'Отклонено', 'Отложено', 'Утверждено', 'В работе', 'Выполнено', 'Просрочено', 'Отменено'][state];
+			return ['Неизвестный', 'Планируется', 'Отклонено', 'Отложено', 'Утверждено', 'В работе', 'Выполнено', 'Просрочено', 'На согласовании', 'Отменено'][state];
 		},
 
 		getUserName(id) {
@@ -329,10 +340,12 @@ export default {
 		},
 
 		сhangeProgress() {
+
 			let self = this;
 			const options = {
 				task: this.task
 			};
+
 			this.$modal.show(ChangeProgress,
 				options,
 				{
@@ -346,54 +359,170 @@ export default {
 
 						self.setLoaderState(true);
 
-						if (progress) {
-							let response = await api.post('Tasks/setProgress/' + progress.taskId, progress);
-							self.task.taskSteps.push(response);
-						}
+						let response = await api.post('Tasks/setProgress/' + progress.taskId, progress);
+						self.task.taskSteps.push(response);
+						self.task.progress = progress.value;
 
 						self.setLoaderState(false);
 
 						if (progress.value == 100) {
 
-							self.task.state = 6;
+							self.task.state = 8;
 
-							let options = {
-								title: 'Внимание!',
-								content: `<p>Вы установили прогресс выполнения задачи в 100%, состояние текущей задачи будет автоматически обновлен до статуса "Выполнено"` +
-									` и отправлены уведомления на почту.</p>`
-							};
+							self.$modal.show(MailAlertInitiator,
+								{
+									task: self.task
+								},
+								{
+									height: 'auto',
+									width: '600px',
+									clickToClose: false
+								},
+								{
+									async send(users) {
 
-							self.$modal.show(taskMessage, options, {
-								height: 'auto',
-								width: '600px',
-								clickToClose: false
-							});
+										let recipients = [];
 
-							let _recipients = [];
+										for (let userId of users) {
+											recipients.push({
+												taskId: self.task.id,
+												userId: userId,
+												mailId: 4
+											});
+										}
 
-							if (self.task.initiatorId == self.task.executorId || !self.task.executorId) {
-								_recipients.push({
-									taskId: self.task.id,
-									userId: self.task.initiatorId,
-									mailId: 2
-								});
-							} else {
-								_recipients.push({
-									taskId: self.task.id,
-									userId: self.task.initiatorId,
-									mailId: 2
-								});
-								_recipients.push({
-									taskId: self.task.id,
-									userId: self.task.executorId,
-									mailId: 2
-								});
-							}
+										await api.post('Tasks/SendTaskMail', recipients);
 
-							await api.post('Tasks/sendTaskMail', _recipients);
+									}
+								}
+							);
+
+							// let options = {
+							// 	title: 'Внимание!',
+							// 	content: `<p>Вы установили прогресс выполнения задачи в 100%, состояние текущей задачи будет автоматически обновлен до статуса "Выполнено"` +
+							// 		` и отправлены уведомления на почту.</p>`
+							// };
+							//
+							// self.$modal.show(taskMessage, options, {
+							// 	height: 'auto',
+							// 	width: '600px',
+							// 	clickToClose: false
+							// });
+
+							// let _recipients = [];
+							//
+							// if (self.task.initiatorId == self.task.executorId || !self.task.executorId) {
+							// 	_recipients.push({
+							// 		taskId: self.task.id,
+							// 		userId: self.task.initiatorId,
+							// 		mailId: 2
+							// 	});
+							// } else {
+							// 	_recipients.push({
+							// 		taskId: self.task.id,
+							// 		userId: self.task.initiatorId,
+							// 		mailId: 2
+							// 	});
+							// 	_recipients.push({
+							// 		taskId: self.task.id,
+							// 		userId: self.task.executorId,
+							// 		mailId: 2
+							// 	});
+							// }
+							//
+							// await api.post('Tasks/sendTaskMail', _recipients);
 
 						}
 
+					}
+				});
+		},
+
+		async conformTask() {
+
+			let self = this;
+
+			let options = {
+				title: 'Изменить состояние задачи',
+				content: 'Вы действительно хотите согласовать задачу и установить состояние задачи на "Выполнено"?'
+			};
+
+			this.$modal.show(DialogWindow,
+				options,
+				{
+					height: 'auto',
+					width: '600px',
+					clickToClose: false
+				},
+				{
+					async ok() {
+
+						self.task.state = 6;
+
+						await api.post('Tasks/changeState', {
+							taskId: self.task.id,
+							state: self.task.state
+						});
+
+						const options = {
+							task: self.task
+						};
+
+						self.$modal.show(MailTaskCompleted,
+							{
+								task: self.task
+							},
+							{
+								height: 'auto',
+								width: '600px',
+								clickToClose: false
+							},
+							{
+								async send(users) {
+
+									let recipients = [];
+
+									for (let userId of users) {
+										recipients.push({
+											taskId: self.task.id,
+											userId: userId,
+											mailId: 2
+										});
+									}
+
+									await api.post('Tasks/SendTaskMail', recipients);
+
+								}
+							}
+						);
+					}
+			});
+
+		},
+
+		sendArchive() {
+
+			let self = this;
+
+			let options = {
+				title: 'Изменить состояние задачи',
+				content: 'Вы действительно хотите отправить задачу в Архив?'
+			};
+
+			this.$modal.show(DialogWindow,
+				options,
+				{
+					height: 'auto',
+					width: '600px',
+					clickToClose: false
+				},
+				{
+					async ok() {
+						await api.post('Tasks/changeStatus', {
+							taskId: self.task.id,
+							status: 2
+						});
+						await self.$parent.loadData();
 					}
 				});
 		},
@@ -438,7 +567,7 @@ export default {
 
 		downloadFile(file) {
 			let url = 'Tasks/downloadFile/' + file.id;
-			api.getFile(url, file.name);
+			api.getFile(url, file.name + '.xlsx');
 		},
 
 		async deleteFile(file) {
@@ -477,8 +606,8 @@ export default {
 		},
 
 		downloadReport() {
-			window.location.href = '/dtm-api/Tasks/getReportTask/' + this.task.id;
-			//window.open('/api/VM_Tasks/getReport/' + this.task.id, '_blank');
+			let url = 'Tasks/getReportTask/' + this.task.id;
+			api.getFile(url, this.task.name);
 		},
 
 		// Удалить задачу

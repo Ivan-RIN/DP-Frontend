@@ -1,47 +1,22 @@
 <template>
 	<div :style="{height: height + 'px', position: 'relative'}">
 		<DtmTaskMiniboard v-for="node in ListTasks"
-			:x="node.x" :y="node.y" :type="node.type" :h="node.h" :task="node.task"
-        />
-        <div class="type-states">
-            <div style="padding: 2px 24px; font-weight: bold;">
-                Состояния:
-            </div>
-            <div style="display: flex;">
-                <div class="task-status" style="background-color: #FFFFFF; margin: 3px;"></div>
-                <div style="padding: 1px 8px;">Планируется</div>
-            </div>
-            <div style="display: flex;">
-                <div class="task-status" style="background-color: #E0E709; margin: 3px;"></div>
-                <div style="padding: 1px 8px;">В работе</div>
-            </div>
-            <div style="display: flex;">
-                <div class="task-status" style="background-color: #257A0D; margin: 3px;"></div>
-                <div style="padding: 1px 8px;">Выполнено</div>
-            </div>
-            <div style="display: flex;">
-                <div class="task-status" style="background-color: #D41717; margin: 3px;"></div>
-                <div style="padding: 1px 8px;">Просрочено</div>
-            </div>
-            <div style="display: flex;">
-                <div class="task-status" style="background-color: #F38F06; margin: 3px;"></div>
-                <div style="padding: 1px 8px;">Отменено</div>
-            </div>
-        </div>
+			:x="node.x" :y="node.y" :type="node.type" :h="node.h" :task="node.task" />
+		<dtm-task-states />
 	</div>
 </template>
 
 <script>
 
 import DtmTaskMiniboard from '@/components/vm/dtm-task-miniboard.vue';
-import DtmTaskTree from '@/components/vm/dtm-task-tree.vue';
+import DtmTaskStates from '@/components/vm/dtm-task-states'
 
 export default {
 	name: 'subtask-scheme',
 
 	components: {
 		DtmTaskMiniboard,
-		DtmTaskTree
+		DtmTaskStates
 	},
 	props: {
 		task: {

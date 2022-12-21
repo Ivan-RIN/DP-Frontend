@@ -1,7 +1,7 @@
 <template>
     <div class="task-list">
         <div style="display: flex;">
-            <select v-model="blockId" @change="boardId = 0">
+            <select v-model="blockId" @change="boardId = 0" style="margin-left: 5px; min-width: 160px;">
                 <option
                     v-for="(block) in blocks"
                     :key="block.id"
@@ -11,80 +11,70 @@
                     {{ block.name }}
                 </option>
             </select>
-            <select v-model="boardId" style="margin-left: 5px;">
-                <option :value="0" style="font-weight: bold;">Все задачи</option>
+            <select v-model="boardId" style="margin-left: 5px; min-width: 160px;">
+                <option :value="0" style="font-weight: bold;">Все доски с задачами</option>
                 <option
                     v-for="(board) in boards"
                     v-if="blockId == board.blockId"
                     :key="board.id"
                     :value="board.id"
-                    :selected="board.id == boardId"
-                >
+                    :selected="board.id == boardId">
                     {{ board.name }}
                 </option>
-
             </select>
         </div>
         <div style="position: relative">
-            <div class="type-states">
-                <div style="padding: 2px 24px; font-weight: bold;">
-                    Состояния:
-                </div>
-                <div style="display: flex;">
-                    <div class="task-status" style="background-color: #FFFFFF; margin: 3px;"></div>
-                    <div style="padding: 1px 8px;">Планируется</div>
-                </div>
-                <div style="display: flex;">
-                    <div class="task-status" style="background-color: #E0E709; margin: 3px;"></div>
-                    <div style="padding: 1px 8px;">В работе</div>
-                </div>
-                <div style="display: flex;">
-                    <div class="task-status" style="background-color: #257A0D; margin: 3px;"></div>
-                    <div style="padding: 1px 8px;">Выполнено</div>
-                </div>
-                <div style="display: flex;">
-                    <div class="task-status" style="background-color: #D41717; margin: 3px;"></div>
-                    <div style="padding: 1px 8px;">Просрочено</div>
-                </div>
-                <div style="display: flex;">
-                    <div class="task-status" style="background-color: #F38F06; margin: 3px;"></div>
-                    <div style="padding: 1px 8px;">Отменено</div>
-                </div>
-            </div>
+			<dtm-task-states :fixed="true" :x="145" :y="290" />
         </div>
         <div class="line"></div>
-        <div class="vm-task-list-header" style="background-color: #10548a; margin-bottom: 15px; border-radius: 5px;">
-            <div class="row-col-1" style="cursor: pointer;"
-                 @click="sortTasks('executionDate')"
-            >
-                Срок исполнения
-            </div>
-            <div class="row-col-2" style="cursor: pointer;"
-                 @click="sortTasks('execution')"
-            >
-                Прогресс
-            </div>
-            <div class="row-col-3" style="cursor: pointer;"
-                 @click="sortStringTasks('name')"
-            >
-                Задачи
-            </div>
-            <div class="row-col-4" style="cursor: pointer;"
-                 @click="sortTasks('initiatorId')"
-            >
-                Инициатор
-            </div>
-            <div class="row-col-5" style="cursor: pointer;"
-                 @click="sortTasks('executorId')"
-            >
-                Исполнитель
-            </div>
-            <div class="row-col-6" style="cursor: pointer;"
-                 @click="sortTasks('createDate')"
-            >
-                Дата создания
-            </div>
-        </div>
+		<div style="background-color: #10548a; border-radius: 5px; margin-bottom: 15px;">
+			<div class="vm-task-list-header" style="padding: 6px 0 0 0;">
+				<div class="row-col-1" style="padding-left: 8px; display: block; gap: 8px;">
+					<span>Срок исполнения</span>
+<!--					<img src="@/assets/icons/filter.png" width="16">-->
+				</div>
+				<div class="row-col-2" style="padding-left: 8px; display: block; gap: 8px;">
+					<span>Прогресс</span>
+<!--					<img src="@/assets/icons/sort.png" width="16">-->
+				</div>
+				<div class="row-col-3" style="position: relative; top: 16px;">
+					Задачи
+				</div>
+				<div class="row-col-4">
+					Инициатор
+				</div>
+				<div class="row-col-5">
+					Исполнитель
+				</div>
+				<div class="row-col-6">
+					Дата создания
+				</div>
+			</div>
+			<div class="vm-task-list-header" style="padding: 4px;">
+				<div class="row-col-1" style="cursor: pointer;" @click="sortExecution()">
+					<div class="button-style">
+						<img src="@/assets/icons/filter.png" width="16" style="">
+						<img src="@/assets/icons/sort.png" width="16">
+					</div>
+				</div>
+				<div class="row-col-2" style="cursor: pointer;" @click="sortProgress()">
+					<div class="button-style">
+						<img src="@/assets/icons/filter.png" width="16">
+						<img src="@/assets/icons/sort.png" width="16">
+					</div>
+				</div>
+				<div class="row-col-3" style="cursor: pointer;">
+				</div>
+				<div class="row-col-4" style="cursor: pointer;">
+					<input class="input-filter" type="text" v-model="filterInitiator">
+				</div>
+				<div class="row-col-5" style="cursor: pointer;">
+					<input class="input-filter" type="text" v-model="filterExecutor">
+				</div>
+				<div class="row-col-6" style="cursor: pointer;">
+				</div>
+			</div>
+		</div>
         <div style="position: relative;"
              v-for="board in boards"
              :key="board.id"
@@ -152,35 +142,52 @@
                 </template>
             </div>
         </div>
+<!--		<div v-for="item in Departments">-->
+<!--			{{ item }}-->
+<!--			<div v-for="item2 in item.getChilds()">-->
+<!--				- {{ item2.getName() }} ({{ item2.getSupervisorName(true, '-') }})-->
+<!--			</div>-->
+<!--			<br><br>-->
+<!--		</div>-->
+<!--		<div @click="getDtmUser(222)">СОХРАНИТЬ 222</div>-->
+<!--		<div @click="getDtmUser2(13)">СОХРАНИТЬ 13</div>-->
+<!--		<div>{{ user }} </div>-->
     </div>
 </template>
 
 <script>
 
 import { mapState, mapMutations, mapGetters } from 'vuex';
+import api from '@/api/baseAPI';
 import DpComboboxComponent from '../common/dp-combobox-component.vue';
 import VMViewTask from '@/components/vm/task-view.vue';
 import VMTaskActionComponent from '@/components/vm/task-action-component.vue';
 import AddTaskForm from '@/components/vm/add-task-form';
 import AddTaskButton from '@/components/vm/add-task-button';
+import DtmTaskStates from '@/components/vm/dtm-task-states'
+import DTM from '@/dtm/manager';
 
 export default {
     name: 'task-list-component',
     data() {
         return {
-            sortFields: {
-                executionDate: false,
-                execution: false,
-                name: false,
-                author: false,
-                executor: false,
-                createDate: false
-            },
+            // sortFields: {
+            //     executionDate: false,
+            //     execution: false,
+            //     name: false,
+            //     createDate: false,
+            // },
+			//Departments: DTM.manager.getListDepartments(),
+			user: null,
             listDepartments: [],
             departmentParent: null,
             departmentCurrentId: 0,
             boardId: this.$store.state.vm.boardId,
             blockId: this.$store.state.vm.blockId,
+			filterExecutionDate: true,
+			filterProgress: true,
+			filterInitiator: '',
+			filterExecutor: ''
         };
     },
     components: {
@@ -188,7 +195,8 @@ export default {
         DpComboboxComponent,
         VMViewTask,
         AddTaskForm,
-        AddTaskButton
+        AddTaskButton,
+		DtmTaskStates
     },
     props: {
         tasks: {
@@ -214,7 +222,37 @@ export default {
         },
         boardId() {
             this.setBoardId(this.boardId);
-        }
+        },
+		filterExecutor(value) {
+			this.filterInitiator = '';
+			this.boards.forEach((board) => {
+				board.tasks = [];
+				board.allTasks.forEach((task) => {
+					let user = this.users[task.executorId];
+					if (user) {
+						if (user.name.toUpperCase()
+							.indexOf(value.toUpperCase()) >= 0) {
+							board.tasks.push(task);
+						}
+					}
+				})
+			});
+		},
+		filterInitiator(value) {
+			this.filterExecutor = '';
+			this.boards.forEach((board) => {
+				board.tasks = [];
+				board.allTasks.forEach((task) => {
+					let user = this.users[task.initiatorId];
+					if (user) {
+						if (user.name.toUpperCase()
+							.indexOf(value.toUpperCase()) >= 0) {
+							board.tasks.push(task);
+						}
+					}
+				})
+			});
+		},
     },
     methods: {
 
@@ -268,7 +306,7 @@ export default {
                 clickToClose: false,
             });
         },
-        overdueDateColor(state, endDate) {
+        __overdueDateColor(state, endDate) {
             let date = new Date(endDate);
             let current = new Date();
             current.setHours(0);
@@ -284,7 +322,7 @@ export default {
         getNameDepartment(id) {
             return this.departments[id].abbreviation;
         },
-        hasParentDepartment(id) {
+        __hasParentDepartment(id) {
             return !!this.departments[id].parentId;
         },
         getNameParentDepartment(id) {
@@ -300,7 +338,7 @@ export default {
             if (fio.length > 2) return fio[0] + ' ' + fio[1][0] + '.' + fio[2][0] + '.';
             return user.name;
         },
-        sortStringTasks(field) {
+        __sortStringTasks(field) {
             this.sortFields[field] = !this.sortFields[field];
             for (let id in this.tasks) {
                 let tasks = this.tasks[id];
@@ -311,7 +349,7 @@ export default {
                 }
             }
         },
-        sortTasks(field) {
+        __sortTasks(field) {
             this.sortFields[field] = !this.sortFields[field];
             for (let id in this.tasks) {
                 let tasks = this.tasks[id];
@@ -322,8 +360,33 @@ export default {
                 }
             }
         },
+		sortExecution() {
+			this.filterExecutionDate = !this.filterExecutionDate;
+			this.boards.forEach((board) => {
+				if (this.filterExecutionDate) {
+					board.tasks.sort((a, b) => a.endDate > b.endDate ? -1 : 1);
+					board.allTasks.sort((a, b) => a.endDate > b.endDate ? -1 : 1);
+				} else {
+					board.tasks.sort((a, b) => a.endDate > b.endDate ? 1 : -1);
+					board.allTasks.sort((a, b) => a.endDate > b.endDate ? 1 : -1);
+				}
+			});
+		},
+		sortProgress() {
+			this.filterProgress = !this.filterProgress;
+			this.boards.forEach((board) => {
+				if (this.filterProgress) {
+					board.tasks.sort((a, b) => a.progress > b.progress ? -1 : 1);
+					board.allTasks.sort((a, b) => a.progress > b.progress ? -1 : 1);
+				} else {
+					board.tasks.sort((a, b) => a.progress > b.progress ? 1 : -1);
+					board.allTasks.sort((a, b) => a.progress > b.progress ? 1 : -1);
+				}
+			});
+		},
         downloadBoardReport(board) {
-            window.location.href = '/dtm-api/Tasks/getReportBoard/' + board.id;
+			let url = 'Tasks/getReportBoard/' + board.id;
+			api.getFile(url, board.name + '.xlsx');
         },
         getAccessAddTask(board) {
             if (this.currentUser.access.isDeveloper || this.currentUser.access.isAdministrator)
@@ -345,16 +408,23 @@ export default {
         },
         getColorStatus(task) {
 
-            if (task.state == 5) return  '#257A0D 0 ' + task.progress + '%, #E0E709 0 100%';
+			let state = task.state;
 
-            let color ='#';
-            if (task.state == 1) color += 'FFFFFF';   // Планируется
-            else if (task.state == 5) color += 'E0E709';   // В работе
-            else if (task.state == 6) color += '257A0D';   // Выполнено, Завершено
-            else if (task.state == 7) color += 'D41717';   // Просрочено
-            else if (task.state == 8) color += 'F38F06';   // Отменено
-            else color += '0493FC';
-            return color + ' 100%';
+        	let states = {
+				1: '#1A88DE',	// Планируется
+				2: '#FFFFFF',	// Отклонено
+				3: '#FFFFFF',	// Отложено
+				4: '#FFFFFF',	// Утверждено
+				5: '#E0E709',	// В работе
+				6: '#257A0D',	// Выполнено, Завершено
+				7: '#D41717',	// Просрочено
+				8: '#F38F06',	// На согласовании
+				9: '#858585'	// Отменено
+			};
+
+            if (state == 5) return `${states[5]} 0% ${task.progress}%, ${states[6]} 0 100%`;
+			return `${states[state]} 100%`;
+
         }
     },
     mounted() {
@@ -407,9 +477,8 @@ input.Executor {
         display: flex;
         flex-wrap: nowrap;
         flex-direction: row;
-        min-height: 40px;
-        padding: 10px 10px 10px 10px;
-        border-bottom: solid 2px $app-background-color;
+        padding: 0px;
+        /*border-bottom: solid 2px $app-background-color;*/
         font-weight: bold;
     }
 
@@ -445,6 +514,7 @@ input.Executor {
 }
 
 .task-list {
+
     a {
         cursor: pointer;
     }
@@ -657,41 +727,43 @@ input.Executor {
 }
 
 .row-col-3 {
-    flex: 0 0 670px;
+    flex: 0 0 650px;
     text-align: center;
 }
 
 .row-col-4 {
-    flex: 0 0 160px;
+    flex: 0 0 170px;
     text-align: center;
 }
 
 .row-col-5 {
-    flex: 0 0 160px;
+    flex: 0 0 170px;
     text-align: center;
 }
 
 .row-col-6 {
-    flex: 0 0 100px;
+    flex: 0 0 120px;
     text-align: center;
 }
 
-.type-states {
-    position: absolute;
-    border: 1px solid #ffffff;
-    background-color: #10548A;
-    padding: 5px 10px;
-    left: -160px;
-    top: 40px;
-    width: 140px;
+.button-style {
+	display: inline-block;
+	padding: 4px 16px 0px;
+	background: linear-gradient(#10548a, #206399, #10548a);
+	border-radius: 5px;
+	border: 1px solid #1b7ac6;
 }
 
-.task-status {
-    width: 12px;
-    height: 12px;
-    border-radius: 100%;
-    background-color: #ffffff;
-    border: 1px solid #fff;
+.button-style:hover {
+	border: 1px solid #ffffff;
+}
+
+.input-filter {
+	width: 150px;
+	height: auto;
+	padding: 4px 8px;
+	border-radius: 5px;
+	border: 1px solid #1b7ac6;
 }
 
 </style>
