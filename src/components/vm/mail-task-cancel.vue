@@ -3,8 +3,8 @@
 		<div style="font-weight: bold; font-size: 16px;">Рассылка уведомления на электронную почту:</div>
 		<div class="line"></div>
 		<div>
-			Вы установили состояние текущей задачи в "Выполнено".<br>
-			Отправить уведомление на почту о выполнении задачи?
+			Вы отклонили согласование задачи и вернули её в стадию «В работе».<br>
+			Отправить уведомление на почту, что текущая задача была возвращена в работу?
 		</div>
 		<div slot="body">
 			<div style="padding: 10px; font-size: 16px; margin: 10px 0;">
@@ -47,14 +47,14 @@ import DpModal from '@/components/vm/dp-modal';
 import { mapState } from 'vuex';
 
 export default {
-	name: 'mail-task-completed',
+	name: 'mail-task-cancel',
 	components: {
 		DpModal
 	},
 	props: ['task'],
 	data() {
 		return {
-			initiator: true,
+			initiator: false,
 			executor: this.task.initiatorId != this.task.executorId,
 			listUsers: []
 		};

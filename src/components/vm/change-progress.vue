@@ -70,6 +70,7 @@ export default {
     methods: {
         close() {
             this.$emit('close');
+			this.$parent.$emit('close');
         },
         appFiles() {
             this.$refs.inputFiles.click();

@@ -223,7 +223,9 @@ import SetParentTask from '@/components/vm/set-parent-task';
 import ChangeBoardTask from '@/components/vm/change-board-task';
 import MailAlertInitiator from '@/components/vm/mail-alert-initiator';
 import MailTaskCompleted from '@/components/vm/mail-task-completed';
+import MailTaskCancel from '@/components/vm/mail-task-cancel';
 import DialogWindow from '@/components/vm/dialog-window';
+
 
 export default {
 	name: 'task-view',
@@ -339,7 +341,7 @@ export default {
 			});
 		},
 
-		сhangeProgress() {
+		сhangeProgress(callback) {
 
 			let self = this;
 			const options = {
@@ -358,12 +360,15 @@ export default {
 					async save(progress) {
 
 						self.setLoaderState(true);
-
 						let response = await api.post('Tasks/setProgress/' + progress.taskId, progress);
 						self.task.taskSteps.push(response);
 						self.task.progress = progress.value;
-
 						self.setLoaderState(false);
+
+						if (typeof callback == 'function'){
+							callback();
+							return;
+						}
 
 						if (progress.value == 100) {
 
@@ -434,6 +439,10 @@ export default {
 
 						}
 
+					},
+					close() {
+						if (typeof callback == 'function')
+							callback();
 					}
 				});
 		},
@@ -444,7 +453,10 @@ export default {
 
 			let options = {
 				title: 'Изменить состояние задачи',
-				content: 'Вы действительно хотите согласовать задачу и установить состояние задачи на "Выполнено"?'
+				content: 'Вы действительно хотите согласовать задачу?<br><br>' +
+						'«ДА» - Согласовать задачу и перевести в стадию «Выполнено».<br>' +
+						'«НЕТ» - Отклонить согласование и вернуть задачу в стадию «В работе». Установить текущий прогресс, оставить комментарий, отправить уведомление исполнителю.<br><br>',
+				cancel: true
 			};
 
 			this.$modal.show(DialogWindow,
@@ -495,6 +507,47 @@ export default {
 								}
 							}
 						);
+					},
+					async cancel() {
+
+						self.task.state = 5;
+
+						await api.post('Tasks/changeState', {
+							taskId: self.task.id,
+							state: self.task.state
+						});
+
+						self.сhangeProgress(function () {
+
+							self.$modal.show(MailTaskCancel,
+								{
+									task: self.task
+								},
+								{
+									height: 'auto',
+									width: '600px',
+									clickToClose: false
+								},
+								{
+									async send(users) {
+
+										let recipients = [];
+
+										for (let userId of users) {
+											recipients.push({
+												taskId: self.task.id,
+												userId: userId,
+												mailId: 5
+											});
+										}
+
+										await api.post('Tasks/SendTaskMail', recipients);
+
+									}
+								}
+							);
+
+						});
 					}
 			});
 

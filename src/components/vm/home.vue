@@ -20,16 +20,16 @@
 				@click="activeComponent = 'list-boards'">
 				Доски ВУ
 			</button>
-			<!--			<button-->
-			<!--				:style="{backgroundColor: activeComponent == 'subtask-scheme' ? '#0c79cd' : ''}"-->
-			<!--				@click="activeComponent = 'subtask-scheme'">-->
-			<!--				Схема-->
-			<!--			</button>-->
 			<button
 				:style="{backgroundColor: activeComponent == 'list-users' ? '#0c79cd' : ''}"
 				@click="activeComponent = 'list-users'">
 				Резиденты
 			</button>
+<!--			<button-->
+<!--				:style="{backgroundColor: activeComponent == 'board-statistics' ? '#0c79cd' : ''}"-->
+<!--				@click="activeComponent = 'board-statistics'">-->
+<!--				Статистика-->
+<!--			</button>-->
 			<div style="width: 100%;"></div>
 		</div>
 		<div v-show="!loaderState">
@@ -68,6 +68,7 @@ import ListUsers from '@/components/vm/list-users.vue';
 import ListBoards from '@/components/vm/list-boards.vue';
 import BoardView from '@/components/vm/board-view.vue';
 import SubtaskScheme from '@/components/vm/subtask-scheme.vue';
+import BoardStatistics from '@/components/vm/board-statistics.vue'
 import DTM from '@/dtm/manager';
 
 export default {
@@ -80,7 +81,8 @@ export default {
 		ListUsers,
 		ListBoards,
 		BoardView,
-		SubtaskScheme
+		SubtaskScheme,
+		BoardStatistics
 	},
 	props: {},
 	data() {
@@ -224,6 +226,11 @@ export default {
 		openViewBoard(board) {
 			this.board = board;
 			this.activeComponent = 'board-view';
+		},
+
+		openBoardStatistics(board) {
+			this.board = board;
+			this.activeComponent = 'board-statistics';
 		},
 
 		closeViewTask() {

@@ -8,7 +8,8 @@
         <div class="add-task-footer">
             <slot name="footer">
                 <div data-button @click="ok()">Да</div>
-                <div data-button @click="close()">Нет</div>
+                <div v-show="cancel" data-button @click="doCancel()">Нет</div>
+				<div data-button @click="close()">Закрыть</div>
             </slot>
         </div>
     </div>
@@ -28,15 +29,23 @@ export default {
             type: String,
             default: '',
         },
+		cancel: {
+        	type: Boolean,
+			default: false
+		}
     },
     methods: {
-        close() {
-            this.$emit('close');
-        },
         ok() {
             this.$emit('close');
             this.$parent.$emit('ok');
-        }
+        },
+		doCancel() {
+			this.$emit('close');
+			this.$parent.$emit('cancel');
+		},
+		close() {
+			this.$emit('close');
+		}
     },
 };
 </script>

@@ -53,14 +53,14 @@
 			<div class="vm-task-list-header" style="padding: 4px;">
 				<div class="row-col-1" style="cursor: pointer;" @click="sortExecution()">
 					<div class="button-style">
-						<img src="@/assets/icons/filter.png" width="16" style="">
-						<img src="@/assets/icons/sort.png" width="16">
+						<img src="@/assets/icons/w-filter.png" width="16" style="">
+						<img src="@/assets/icons/w-sort.png" width="16">
 					</div>
 				</div>
 				<div class="row-col-2" style="cursor: pointer;" @click="sortProgress()">
 					<div class="button-style">
-						<img src="@/assets/icons/filter.png" width="16">
-						<img src="@/assets/icons/sort.png" width="16">
+						<img src="@/assets/icons/w-filter.png" width="16">
+						<img src="@/assets/icons/w-sort.png" width="16">
 					</div>
 				</div>
 				<div class="row-col-3" style="cursor: pointer;">
@@ -92,6 +92,12 @@
                     :data="board"
                 >
                 </add-task-button>
+				<add-task-button
+					:title="'Статистика'"
+					:action="openBoardStatistics"
+					:data="board"
+				>
+				</add-task-button>
                 <add-task-button
                     v-if="getAccessAddTask(board)"
                     :title="'Добавить Задачу'"
@@ -114,13 +120,12 @@
                         </div>
                         <div class="row-col-3" style="text-align: left; display: flex; align-items: center;">
                             <div style="width: 24px;">
-							<img v-if="task.id == task.mainTaskId" src="@/assets/icons/home_house.png" width="18" style="position: relative; top: 2px;">
-<!--							<img v-if="task.countChilds" src="@/assets/icons/structure.png" width="16">-->
-<!--                            <img v-if="task.mainTaskId" src="@/assets/icons/structure.png" width="16">-->
+							<img v-if="task.parentTaskId" src="@/assets/icons/home_house.png" width="18" style="position: relative; top: 2px;">
                             </div>
                             <div style="width: 24px; text-align: center;">
-<!--                                <img v-if="task.state == 6" src="@/assets/icons/performed.png" width="20">-->
-                                <img v-if="task.priority == 5 && task.state == 5" src="@/assets/icons/fire.png" width="24">
+<!--                                <img v-if="task.state == 6" src="@/assets/icons/performed.png" width="16" style="border: 1px solid #fff; border-radius: 50%;">-->
+                                <img v-if="task.priority == 4 && task.state == 5" src="@/assets/icons/fire.png" width="24">
+								<img v-else-if="task.priority == 5 && task.state == 5" src="@/assets/icons/r-fire.png" width="24">
                                 <div v-else class="task-miniboard-status" :style="{ background: 'conic-gradient(' + getColorStatus(task) + ', transparent 0)'}"></div>
                             </div>
                             <div style="padding-left: 10px;">#{{ task.id }}. {{ task.name }}</div>
@@ -142,16 +147,6 @@
                 </template>
             </div>
         </div>
-<!--		<div v-for="item in Departments">-->
-<!--			{{ item }}-->
-<!--			<div v-for="item2 in item.getChilds()">-->
-<!--				- {{ item2.getName() }} ({{ item2.getSupervisorName(true, '-') }})-->
-<!--			</div>-->
-<!--			<br><br>-->
-<!--		</div>-->
-<!--		<div @click="getDtmUser(222)">СОХРАНИТЬ 222</div>-->
-<!--		<div @click="getDtmUser2(13)">СОХРАНИТЬ 13</div>-->
-<!--		<div>{{ user }} </div>-->
     </div>
 </template>
 
@@ -422,10 +417,14 @@ export default {
 				9: '#858585'	// Отменено
 			};
 
-            if (state == 5) return `${states[5]} 0% ${task.progress}%, ${states[6]} 0 100%`;
+            if (state == 5) return `${states[6]} 0% ${task.progress}%, ${states[5]} 0% 100%`;
 			return `${states[state]} 100%`;
 
-        }
+        },
+		openBoardStatistics(board) {
+			this.$parent.openBoardStatistics(board);
+		}
+
     },
     mounted() {
         this.init();
