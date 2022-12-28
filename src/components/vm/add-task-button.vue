@@ -24,7 +24,6 @@ export default {
 
 <style scoped>
 	.style {
-
 		padding: 6px 10px 6px 10px;
 		border-radius: 5px 5px 5px 5px;
 		cursor: pointer;

@@ -11,7 +11,7 @@
 					</div>
 					<hr style="margin-bottom: 10px;">
 					<div class="stat-row">
-						<div>
+						<div style="font-weight: bold;">
 							Всего поставлено задач:
 						</div>
 						<div>
@@ -50,22 +50,23 @@
 							{{ boardStat.canceled }}
 						</div>
 					</div>
+
 					<div class="stat-row" style="margin-top: 10px;">
+						<div style="font-weight: bold;">Инициаторы:</div>
 						<div>
+							задач
+						</div>
+					</div>
+					<div v-for="(item, index) in initiatorTasks" :key="index" class="stat-row">
+						<div>{{ item[0] }}</div>
+						<div>{{ item[1] }}</div>
+					</div>
+					<div class="stat-row" style="margin-top: 10px;">
+						<div style="font-weight: bold;">
 							Всего исполнителей:
 						</div>
 						<div>
 							{{ executorNames.length }}
-						</div>
-					</div>
-					<div class="stat-row">
-						<div>
-							Инициаторы:
-						</div>
-						<div>
-							<div v-for="name in initiatorNames">
-								{{ name }}
-							</div>
 						</div>
 					</div>
 				</template>
@@ -75,13 +76,40 @@
 				<div style="width: 100%; margin-bottom: 20px;">
 					<canvas id="board-chart-statistics"></canvas>
 				</div>
-				<h3 style="text-align: center;">Статистика по исполнителям</h3>
-				<div style="width: 100%">
+				<div style="position: relative;">
+					<h3 style="text-align: center;">Статистика по исполнителям</h3>
+					<div class="select-show">
+						<add-task-button
+							:title="table ? 'График' : 'Таблица'"
+							:action="select"
+						/>
+					</div>
+				</div>
+				<div v-show="table" style="width: 100%">
+					<div class="v-table">
+						<div class="v-table-header v-table-row">
+							<div><div>Исполнитель</div></div>
+							<div><div>Всего</div></div>
+							<div><div>В работе</div></div>
+							<div><div>Выполнено</div></div>
+							<div><div>Просрочено</div></div>
+						</div>
+						<div class="v-table-row" v-for="(item, index) in executorNames" :key="index">
+							<div>{{ index+1 }}. {{ item }}</div>
+							<div>{{ userStat[0][index] }}</div>
+							<div>{{ userStat[1][index] }}</div>
+							<div>{{ userStat[2][index] }}</div>
+							<div>{{ userStat[3][index] }}</div>
+						</div>
+					</div>
+				</div>
+				<div v-show="!table" style="width: 100%">
 					<canvas id="user-chart-statistics"></canvas>
 				</div>
+
 			</div>
 		</div>
-
+		<div style="margin: 20px;"></div>
 	</div>
 </template>
 
@@ -89,6 +117,7 @@
 
 import Chart from 'chart.js';
 import { mapState } from 'vuex';
+import AddTaskButton from '@/components/vm/add-task-button';
 
 let states = {
 	1: '#1A88DE',	// Планируется
@@ -118,20 +147,29 @@ function getShortName(name) {
 
 export default {
 	name: 'board-statistics',
+	components: {
+		AddTaskButton
+	},
 	props: {
 		board: {
 			type: Object,
 			required: true
 		},
+		allTasks: {
+			type: Boolean,
+			default: true
+		}
 	},
 	data() {
 		return {
 			display: false,
+			table: false,
 			departmentWidth: 150,
 			boardStat: {},
 			datasets: [],
 			userStat: [[], [], [], []],
 			initiatorNames: [],
+			initiatorTasks: {},
 			executorNames: []
 		};
 	},
@@ -300,8 +338,10 @@ export default {
 		},
 		createDataSet() {
 
+			let tasks = this.allTasks ? this.board.allTasks : this.board.tasks;
+
 			this.boardStat = {
-				all: this.board.tasks.length,
+				all: tasks.length,
 				inWork: 0,
 				completed: 0,
 				overdue: 0,
@@ -309,10 +349,9 @@ export default {
 			};
 
 			let user, index;
-			let initiators = {};
 			let executors = {};
 
-			for (let task of this.board.tasks) {
+			for (let task of tasks) {
 
 				if (task.state == 5 || task.state == 8) this.boardStat.inWork++;
 				if (task.state == 6) this.boardStat.completed++;
@@ -322,9 +361,10 @@ export default {
 				user = this.users[task.initiatorId];
 
 				if (user) {
-					if (!initiators[user.id]) {
-						initiators[user.id] = true;
-						this.initiatorNames.push(getShortName(user.name));
+					if (this.initiatorTasks[user.id] == undefined) {
+						this.initiatorTasks[user.id] = [getShortName(user.name), 1];
+					} else {
+						this.initiatorTasks[user.id][1]++;
 					}
 				}
 
@@ -356,6 +396,10 @@ export default {
 			this.datasets[3] = (this.boardStat.overdue / this.boardStat.all * 100).toFixed(2);
 			this.datasets[4] = (this.boardStat.canceled / this.boardStat.all * 100).toFixed(2);
 
+		},
+
+		select() {
+			this.table = !this.table;
 		}
 	},
 	mounted() {
@@ -382,6 +426,77 @@ export default {
 
 .stat-row > div:nth-child(2) {
 	padding: 4px;
+}
+
+.select-show {
+	position: absolute;
+	width: 100px;
+	right: 10px;
+	top: -6px;
+	padding: 5px;
+	cursor: pointer;
+	font-weight: bold;
+	text-align: center;
+}
+
+.select-show:hover {
+	text-decoration-line: underline;
+}
+
+.v-table {
+	margin: 10px;
+}
+
+.v-table > div:nth-child(3n+3) {
+	background: #1e90ea;
+	background: linear-gradient(to bottom, #0f3e5d, #083354, #0f3e5d);
+}
+
+.v-table-header {
+	font-weight: bold;
+	background: linear-gradient(to bottom, #0765a0, #083354);
+}
+
+.v-table-header div {
+	padding: 6px;
+}
+
+.v-table-row {
+	display: flex;
+	justify-content: space-around;
+}
+
+.v-table-row > div:nth-child(1) {
+	border-right:  1px solid #0E4268;
+	width: 32%;
+	padding: 6px 20px;
+}
+
+.v-table-row > div:nth-child(2) {
+	text-align: center;
+	border-right:  1px solid #0E4268;
+	width: 18%;
+	padding: 6px 10px;
+}
+
+.v-table-row > div:nth-child(3) {
+	text-align: center;
+	border-right:  1px solid #0E4268;
+	width: 18%;
+	padding: 6px 10px;
+}
+
+.v-table-row > div:nth-child(4) {
+	text-align: center;
+	border-right:  1px solid #0E4268;
+	width: 18%;
+	padding: 6px 10px;
+}
+
+.v-table-row > div:nth-child(5) {
+	text-align: center;
+	width: 18%;
+	padding: 6px 10px;
 }
 
 </style>

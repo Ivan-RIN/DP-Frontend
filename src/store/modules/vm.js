@@ -41,7 +41,12 @@ const state = {
 	boardBlocks: {},
 	boardUsers: {},
 	rootDepartments: [],
-	listDepartments: []
+	listDepartments: [],
+	taskFilter: {
+		state: -1,
+		initiator: '',
+		executor: '',
+	}
 };
 
 const getters = {

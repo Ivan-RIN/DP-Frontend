@@ -4,7 +4,7 @@
         <div slot="body">
             <div style="padding: 10px;">
                 <div class="form-row">
-                    <div>Выберете тип доспупа</div>
+                    <div>Выберете тип прав для создания задач</div>
                     <div>
                         <select style="width: 100%;" v-model="board.accessType">
                             <option
@@ -17,6 +17,10 @@
                                 {{ access }}
                             </option>
                         </select>
+						<div style="font-size: 12px; font-weight: normal; padding: 4px;">
+							Частный - владелец и инициаторы доски, локальный - любой пользователь подразделения,
+							публичный – любой пользователь с правами на просмотр доски.
+						</div>
                     </div>
                 </div>
                 <div class="form-row">

@@ -620,7 +620,7 @@ export default {
 
 		downloadFile(file) {
 			let url = 'Tasks/downloadFile/' + file.id;
-			api.getFile(url, file.name + '.xlsx');
+			api.getFile(url, file.name);
 		},
 
 		async deleteFile(file) {
@@ -660,7 +660,7 @@ export default {
 
 		downloadReport() {
 			let url = 'Tasks/getReportTask/' + this.task.id;
-			api.getFile(url, this.task.name);
+			api.getFile(url, this.task.name + '.xlsx');
 		},
 
 		// Удалить задачу

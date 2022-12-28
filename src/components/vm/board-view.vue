@@ -57,7 +57,10 @@
 					</div>
 					<div class="line"></div>
 					<div class="body-row">
-						<div>Инициаторы:</div>
+						<div>
+							<div>Инициаторы:</div>
+							<div style="font-size: 12px; font-weight: normal;">Пользователи которые могут заводить задачи</div>
+						</div>
 						<div>
 							<div v-if="!getInitiators.length">
 								Не назначены
@@ -77,7 +80,10 @@
 					</div>
 					<div class="line"></div>
 					<div class="body-row">
-						<div>Структурные подразделения:</div>
+						<div>
+							Структурные подразделения:
+							<div style="font-size: 12px; font-weight: normal;">Подразделения которые могут просматривать задачи</div>
+						</div>
 						<div>
 							<div v-if="!getDepartments().length">
 								Не назначены
@@ -96,7 +102,10 @@
 					</div>
 					<div class="line"></div>
 					<div class="body-row">
-						<div>Пользователи:</div>
+						<div>
+							Пользователи:
+							<div style="font-size: 12px; font-weight: normal;">Пользователи которые могут просматривать задачи</div>
+						</div>
 						<div>
 							<div v-if="!getUsers.length">
 								Не назначены

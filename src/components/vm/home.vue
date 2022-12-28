@@ -34,16 +34,19 @@
 		</div>
 		<div v-show="!loaderState">
 			<div class="line"></div>
-			<component :is="activeComponent" v-if="isActive"
-					   :tasks="tasks"
-					   :boards="boards"
-					   :board="board"
-					   :task="task"
-					   :users="users"
-					   :openViewTask="openViewTask"
-					   :openViewBoard="openViewBoard"
-					   :buttonAction=modalButtonAction
-			/>
+			<div v-if="isActive">
+				<component
+					:is="activeComponent"
+					:tasks="tasks"
+					:boards="boards"
+					:board="board"
+					:task="task"
+					:users="users"
+					:openViewTask="openViewTask"
+					:openViewBoard="openViewBoard"
+					:buttonAction=modalButtonAction
+				/>
+			</div>
 			<div v-else>
 				<h3>
 					Ваша учетная запись не найдена или заблокирована!<br>
@@ -52,7 +55,6 @@
 				</h3>
 			</div>
 		</div>
-
 	</div>
 </template>
 
