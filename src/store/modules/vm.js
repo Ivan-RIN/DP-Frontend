@@ -44,8 +44,9 @@ const state = {
 	listDepartments: [],
 	taskFilter: {
 		state: -1,
+		date: 0,
 		initiator: '',
-		executor: '',
+		executor: ''
 	}
 };
 

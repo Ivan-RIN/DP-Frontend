@@ -1,5 +1,18 @@
 <template>
 	<div>
+		<div style="display: flex; justify-content: space-between;">
+			<div>
+			</div>
+			<div>
+				<select v-model="dateTask" style="margin-left: 5px; width: 160px;">
+					<option :value="0" style="font-weight: bold;">За весь период</option>
+					<option :value="1">В прошлом месяце</option>
+					<option :value="2">В этом месяце</option>
+					<option :value="3">В следующем месяце</option>
+				</select>
+			</div>
+		</div>
+		<div class="line"></div>
 		<div style="display: flex; gap: 10px;">
 			<div style="width: 500px;">
 				<template v-if="display">
@@ -73,9 +86,7 @@
 			</div>
 			<div style="width: 900px;">
 				<h3 style="text-align: center;">Общая статистика в %</h3>
-				<div style="width: 100%; margin-bottom: 20px;">
-					<canvas id="board-chart-statistics"></canvas>
-				</div>
+				<div id="board-chart-statistics" style="width: 100%; margin-bottom: 20px;"></div>
 				<div style="position: relative;">
 					<h3 style="text-align: center;">Статистика по исполнителям</h3>
 					<div class="select-show">
@@ -94,19 +105,27 @@
 							<div><div>Выполнено</div></div>
 							<div><div>Просрочено</div></div>
 						</div>
-						<div class="v-table-row" v-for="(item, index) in executorNames" :key="index">
-							<div>{{ index+1 }}. {{ item }}</div>
-							<div>{{ userStat[0][index] }}</div>
-							<div>{{ userStat[1][index] }}</div>
-							<div>{{ userStat[2][index] }}</div>
-							<div>{{ userStat[3][index] }}</div>
-						</div>
+						<template v-if="executorNames.length">
+							<div class="v-table-row" v-for="(item, index) in executorNames" :key="index">
+								<div>{{ index+1 }}. {{ item }}</div>
+								<div>{{ userStat[0][index] }}</div>
+								<div>{{ userStat[1][index] }}</div>
+								<div>{{ userStat[2][index] }}</div>
+								<div>{{ userStat[3][index] }}</div>
+							</div>
+						</template>
+						<template v-else>
+							<div class="v-table-row">
+								<div>-</div>
+								<div>0</div>
+								<div>0</div>
+								<div>0</div>
+								<div>0</div>
+							</div>
+						</template>
 					</div>
 				</div>
-				<div v-show="!table" style="width: 100%">
-					<canvas id="user-chart-statistics"></canvas>
-				</div>
-
+				<div id="user-chart-statistics" v-show="!table" style="width: 100%"></div>
 			</div>
 		</div>
 		<div style="margin: 20px;"></div>
@@ -162,6 +181,9 @@ export default {
 	},
 	data() {
 		return {
+			chartBoard: null,
+			chartUsers: null,
+			dateTask: 0,
 			display: false,
 			table: false,
 			departmentWidth: 150,
@@ -174,14 +196,25 @@ export default {
 		};
 	},
 	computed: {
-		...mapState('vm', ['currentUser', 'users', 'boards']),
+		...mapState('vm', ['currentUser', 'users', 'boards', 'taskFilter']),
+	},
+	watch: {
+		dateTask(value) {
+			//this.table = false;
+			//this.taskFilter.statistics = value;
+			this.createDataSet();
+			this.createBoardChart();
+			this.createUserChart();
+		},
 	},
 	methods: {
-
 		createBoardChart() {
 
-			const canvas = document.getElementById(`board-chart-statistics`);
+			const parent = document.getElementById(`board-chart-statistics`);
+			const canvas = document.createElement('canvas');
 			const ctx = canvas.getContext('2d');
+			parent.innerHTML = '';
+			parent.appendChild(canvas);
 			canvas.height = 200;
 
 			let options = {
@@ -228,7 +261,10 @@ export default {
 				maintainAspectRatio: false,
 			};
 
-			this.chart = new Chart(ctx, {
+			if (this.chartBoard)
+				this.chartBoard.destroy();
+
+			this.chartBoard = new Chart(ctx, {
 				type: 'horizontalBar',
 				data: {
 					labels: labels,
@@ -246,10 +282,12 @@ export default {
 		},
 		createUserChart() {
 
-			const canvas = document.getElementById(`user-chart-statistics`);
+			const parent = document.getElementById(`user-chart-statistics`);
+			const canvas = document.createElement('canvas');
 			const ctx = canvas.getContext('2d');
-			const labelLength = this.executorNames.length;
-			canvas.height = labelLength > 1 ? labelLength * 60 : 60;
+			parent.innerHTML = '';
+			parent.appendChild(canvas);
+			canvas.height = this.executorNames.length > 1 ? this.executorNames.length * 60 : 60;
 
 			let options = {
 				type: 'horizontalBar',
@@ -327,7 +365,10 @@ export default {
 				}
 			];
 
-			this.chart = new Chart(ctx, {
+			if (this.chartUsers)
+				this.chartUsers.destroy();
+
+			this.chartUsers = new Chart(ctx, {
 				type: 'horizontalBar',
 				data: {
 					labels: this.executorNames,
@@ -341,17 +382,25 @@ export default {
 			let tasks = this.allTasks ? this.board.allTasks : this.board.tasks;
 
 			this.boardStat = {
-				all: tasks.length,
+				all: 0,
 				inWork: 0,
 				completed: 0,
 				overdue: 0,
 				canceled: 0
 			};
 
+			this.datasets = [];
+			this.userStat = [[], [], [], []];
+			this.initiatorNames = [];
+			this.initiatorTasks = {};
+			this.executorNames = []
+
 			let user, index;
 			let executors = {};
 
 			for (let task of tasks) {
+
+				if (!this.filterDate(task)) continue;
 
 				if (task.state == 5 || task.state == 8) this.boardStat.inWork++;
 				if (task.state == 6) this.boardStat.completed++;
@@ -390,6 +439,8 @@ export default {
 				}
 			}
 
+			this.boardStat.all = this.boardStat.inWork + this.boardStat.completed + this.boardStat.overdue + this.boardStat.canceled;
+
 			this.datasets[0] = 100;
 			this.datasets[1] = (this.boardStat.inWork / this.boardStat.all * 100).toFixed(2);
 			this.datasets[2] = (this.boardStat.completed / this.boardStat.all * 100).toFixed(2);
@@ -397,17 +448,59 @@ export default {
 			this.datasets[4] = (this.boardStat.canceled / this.boardStat.all * 100).toFixed(2);
 
 		},
+		filterDate(task) {
 
+			if (this.dateTask == 0) return true;
+			if (!task.endDate) return false;
+
+			let endDate = new Date(task.endDate);
+
+			switch (this.dateTask) {
+				case 1:
+					return this.isLastMonth(endDate);
+				case 2:
+					return this.isCurrentMonth(endDate);
+				case 3:
+					return this.isNextMonth(endDate);
+				default:
+					return true;
+			}
+		},
 		select() {
 			this.table = !this.table;
-		}
+			if (!this.table) {
+				let self = this;
+				document.getElementById(`user-chart-statistics`).innerHTML = '';
+				setTimeout(function () {
+					self.createUserChart();
+				}, 50);
+			}
+		},
+		isCurrentMonth(date) {
+			let currentDate = new Date();
+			return currentDate.getFullYear() == date.getFullYear() && currentDate.getMonth() == date.getMonth() ;
+		},
+		isNextMonth(date) {
+			let currentDate = new Date();
+			currentDate.setMonth(currentDate.getMonth() + 1);
+			return currentDate.getFullYear() == date.getFullYear() && currentDate.getMonth() == date.getMonth() ;
+		},
+		isLastMonth(date) {
+			let currentDate = new Date();
+			currentDate.setMonth(currentDate.getMonth() - 1);
+			return currentDate.getFullYear() == date.getFullYear() && currentDate.getMonth() == date.getMonth() ;
+		},
 	},
 	mounted() {
 		this.createDataSet();
 		this.createBoardChart();
 		this.createUserChart();
 		this.display = true;
-	}
+	},
+	beforeDestroy() {
+		this.chartBoard.destroy();
+		this.chartUsers.destroy();
+	},
 };
 </script>
 

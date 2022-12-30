@@ -2,7 +2,7 @@
 	<div class="task-list">
 		<div style="display: flex; justify-content: space-between;">
 			<div style="display: flex;">
-				<select v-model="blockId" @change="boardId = 0" style="margin-left: 5px; min-width: 160px;">
+				<select v-model="blockId" @change="boardId = 0" style="margin-left: 5px; width: 160px;">
 					<option
 						v-for="(block) in blocks"
 						:key="block.id"
@@ -12,7 +12,7 @@
 						{{ block.name }}
 					</option>
 				</select>
-				<select v-model="boardId" style="margin-left: 5px; min-width: 160px;">
+				<select v-model="boardId" style="margin-left: 5px; width: 160px;">
 					<option :value="0" style="font-weight: bold;">Все доски с задачами</option>
 					<option
 						v-for="(board) in boards"
@@ -25,14 +25,24 @@
 				</select>
 			</div>
 			<div>
-				<select v-model="stateTask" style="margin-left: 5px; min-width: 160px;">
+				<select v-model="stateTask" style="margin-left: 5px; width: 160px;">
 					<option :value="0" style="font-weight: bold;">Все задачи</option>
 					<option :value="-1" style="font-weight: bold;">Текущие задачи</option>
-					<option :value="-2" style="font-weight: bold;">За сегодня</option>
 					<option :value="5">В работе</option>
 					<option :value="8">На согласовании</option>
 					<option :value="6">Выполнено</option>
 					<option :value="7">Просрочено</option>
+				</select>
+				<select v-model="dateTask" style="margin-left: 5px; width: 160px;">
+					<option :value="0" style="font-weight: bold;">За весь период</option>
+					<option :value="1">За сегодня</option>
+					<option :value="2">На этой недели</option>-->
+					<option :value="8">В прошлом месяце</option>
+					<option :value="3">В этом месяце</option>
+					<option :value="7">В следующем месяце</option>
+					<option :value="4">В этом квартале</option>-->
+					<option :value="5">В этом году</option>
+					<option :value="6">В прошлом году</option>
 				</select>
 			</div>
 		</div>
@@ -185,6 +195,7 @@ export default {
 			widthWindow: 0,
 			user: null,
 			stateTask: this.$store.state.vm.taskFilter.state,
+			dateTask: this.$store.state.vm.taskFilter.date,
 			listDepartments: [],
 			departmentParent: null,
 			departmentCurrentId: 0,
@@ -235,6 +246,10 @@ export default {
 		},
 		stateTask(value) {
 			this.taskFilter.state = value;
+			this.sortTask();
+		},
+		dateTask(value) {
+			this.taskFilter.date = value;
 			this.sortTask();
 		},
 		inputInitiator(value) {
@@ -366,7 +381,7 @@ export default {
 			this.boards.forEach((board) => {
 				board.tasks = [];
 				board.allTasks.forEach((task) => {
-					if (this.filterState(task)) {
+					if (this.filterState(task) && this.filterDate(task)) {
 						if (this.inputInitiator) {
 							let user = this.users[task.initiatorId];
 							if (user) {
@@ -391,18 +406,76 @@ export default {
 			});
 		},
 		filterState(task) {
-			return this.stateTask == 0 || this.stateTask == task.state || (this.stateTask == -1 && task.state != 6) || (this.stateTask == -2 && this.isToday(task.createDate));
+			return this.stateTask == 0 || this.stateTask == task.state || (this.stateTask == -1 && task.state != 6);
 		},
-		isToday(date) {
-			date = new Date(date);
-			date.setHours(0);
-			date.setMinutes(0);
-			date.setSeconds(0, 0);
+		filterDate(task) {
+
+			if (this.dateTask == 0) return true;
+			if (this.dateTask == 1) return this.isCurrentDay(new Date(task.createDate));
+			if (!task.endDate) return false;
+
+			let endDate = new Date(task.endDate);
+
+			switch (this.dateTask) {
+				case 2:
+					return this.isCurrentWeek(endDate);
+				case 3:
+					return this.isCurrentMonth(endDate);
+				case 4:
+					return this.isCurrentQuarter(endDate);
+				case 5:
+					return this.isCurrentYear(endDate);
+				case 6:
+					return this.isLastYear(endDate);
+				case 7:
+					return this.isNextMonth(endDate);
+				case 8:
+					return this.isLastMonth(endDate);
+				default:
+					return true;
+			}
+		},
+		isCurrentDay(date) {
+			date.setHours(0, 0, 0, 0);
 			let currentDate = new Date();
-			currentDate.setHours(0);
-			currentDate.setMinutes(0);
-			currentDate.setSeconds(0, 0);
+			currentDate.setHours(0, 0, 0, 0)
 			return currentDate.getTime() == date.getTime();
+		},
+		isCurrentWeek(date) {
+			let minDate = new Date();
+			let maxDate = new Date();
+			let diffDays = minDate.getDate() - minDate.getDay() + 1;
+			minDate.setDate(diffDays);
+			maxDate.setDate(diffDays + 6);
+			return date >= minDate && date <= maxDate;
+		},
+		isCurrentMonth(date) {
+			let currentDate = new Date();
+			return currentDate.getFullYear() == date.getFullYear() && currentDate.getMonth() == date.getMonth() ;
+		},
+		isNextMonth(date) {
+			let currentDate = new Date();
+			currentDate.setMonth(currentDate.getMonth() + 1);
+			return currentDate.getFullYear() == date.getFullYear() && currentDate.getMonth() == date.getMonth() ;
+		},
+		isLastMonth(date) {
+			let currentDate = new Date();
+			currentDate.setMonth(currentDate.getMonth() - 1);
+			return currentDate.getFullYear() == date.getFullYear() && currentDate.getMonth() == date.getMonth() ;
+		},
+		isCurrentQuarter(date) {
+			let currentDate = new Date();
+			let currentQuarter = Math.floor((currentDate.getMonth() + 3) / 3);
+			let dateQuarter = Math.floor((date.getMonth() + 3) / 3);
+			return currentDate.getFullYear() == date.getFullYear() && currentQuarter == dateQuarter;
+		},
+		isCurrentYear(date) {
+			return new Date().getFullYear() == date.getFullYear();
+		},
+		isLastYear(date) {
+			let currentDate = new Date();
+			currentDate.setFullYear(currentDate.getFullYear() - 1);
+			return currentDate.getFullYear() == date.getFullYear();
 		},
 		selectInitiator(userId) {
 			let user = this.users[userId];
